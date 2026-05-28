@@ -115,6 +115,7 @@ const submitToBackend = async () => {
       "https://studybazaar.onrender.com/auth/signup",
       {
         method: "POST",
+
         headers: {
           "Content-Type": "application/json",
         },

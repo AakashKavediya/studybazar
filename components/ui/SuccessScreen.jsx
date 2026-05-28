@@ -2,7 +2,7 @@
 import { COLORS } from "@/constants/colors";
 import { CheckIcon } from "@/components/ui/Icons";
 import { Button } from "@/components/ui/Button";
-
+import Link from "next/link";
 export default function SuccessScreen({ name, email, onReset }) {
   const firstName = name.split(" ")[0] || "there";
   
@@ -21,9 +21,11 @@ export default function SuccessScreen({ name, email, onReset }) {
         {email}
       </p>
       <p style={{ fontSize: "14px", color: COLORS.textMuted }}>Check your email to verify your account</p>
-      <Button variant="secondary" onClick={onReset} style={{ marginTop: "36px" }}>
-        Create another account
-      </Button>
+      <Link style={{marginTop: 2,}} href="/auth/signin">
+        <Button variant="secondary" style={{ marginTop: "36px" }}>
+          Sign in
+        </Button>
+      </Link>
     </div>
   );
 }

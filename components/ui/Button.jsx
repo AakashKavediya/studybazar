@@ -11,7 +11,8 @@ export const Button = ({
   disabled = false,
   loading = false,
   type = "button",
-  className = ""
+  className = "",
+  style = {}
 }) => {
   const isPrimary = variant === "primary";
   
@@ -47,7 +48,7 @@ export const Button = ({
       type={type}
       onClick={handleClick}
       className={`btn-${variant} ${className}`}
-      style={{ ...baseStyles, ...variantStyles }}
+      style={{ ...baseStyles, ...variantStyles, ...style }}
       disabled={disabled || loading}
     >
       {loading ? (

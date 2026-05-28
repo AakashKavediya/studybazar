@@ -104,7 +104,7 @@ export default function SigninPage() {
         }
         
         // Redirect to dashboard or home
-        router.push("/dashboard");
+        router.push("/");
       } else {
         if (data.detail) {
           if (Array.isArray(data.detail)) {
