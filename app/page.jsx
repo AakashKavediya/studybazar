@@ -1,36 +1,28 @@
 "use client"
 
-import { useState } from "react";
-import Input from "@/components/ui/Input";
-import { Button } from "@/components/ui/Button";
-import AuthCard from "@/components/ui/AuthCard";
-import Divider from "@/components/ui/Divider";
-import Logo from "@/components/ui/Logo";
-import Loader from "@/components/ui/Loader";
-import FormError from "@/components/ui/FormError";
-import SocialButton from "@/components/ui/SocialButton";
-import Modal from "@/components/ui/Modal";
-import Checkbox from "@/components/ui/Checkbox";
-import Heading from "@/components/ui/Heading";
-import Label from "@/components/ui/Label";
+import { useState, useEffect } from "react";
+import { COLORS } from "@/constants/colors";
+import Header from "@/components/Header";
+import BottomTabNav from "@/components/BottomTabNav";
+import SearchBar from "@/components/ui/SearchBar";
+import FilterModal from "@/components/ui/FilterModal";
+import ProductListing from "@/components/ui/ProductListing";
 
 const HomePage = () => {
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [allProducts, setAllProducts] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  
+
   return(
     <div>
-      <div>
-        <Input />
-        <Button />
-        <AuthCard />
-        <Divider />
-        <Logo />
-        <Loader />
-        <FormError />
-        <SocialButton />
-        <Modal />
-        <Checkbox />
-        <Heading />
-        <Label />
-      </div>
+      <Header />
+      <SearchBar />
+      <FilterModal isOpen={isFilterOpen} onClose={() => setIsFilterOpen(false)} />
+      <ProductListing products={allProducts} isLoading={isLoading} />
+      <BottomTabNav />
+        
     </div>
   )
 }

@@ -101,14 +101,10 @@ const submitToBackend = async () => {
   const payload = {
     name: form.name.trim(),
     email: form.email.trim().toLowerCase(),
-
     password: form.pass.trim(),
     confirm_password: form.confirm.trim(),
-
     campus: form.campus.trim(),
-
     phone: cleanedPhone,
-
     year: cleanedYear,
   };
 
@@ -119,7 +115,6 @@ const submitToBackend = async () => {
       "https://studybazaar.onrender.com/auth/signup",
       {
         method: "POST",
-
         headers: {
           "Content-Type": "application/json",
         },
