@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Input from "@/components/ui/Input";
-import Button from "@/components/ui/Button";
+import { Button } from "@/components/ui/Button";
 import AuthCard from "@/components/ui/AuthCard";
 import Divider from "@/components/ui/Divider";
 import Logo from "@/components/ui/Logo";
