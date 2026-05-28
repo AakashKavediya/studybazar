@@ -1,7 +1,7 @@
 // app/auth/reset-password/page.jsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { COLORS } from "@/constants/colors";
@@ -10,7 +10,8 @@ import Field from "@/components/ui/Field";
 import PasswordStrength from "@/components/ui/PasswordStrength";
 import { Button } from "@/components/ui/Button";
 
-export default function ResetPasswordPage() {
+// Main component with the logic
+function ResetPasswordContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const token = searchParams.get("token");
@@ -35,6 +36,8 @@ export default function ResetPasswordPage() {
   const validatePassword = (password) => {
     if (!password) return "Password is required";
     if (password.length < 8) return "Password must be at least 8 characters";
+    if (!/[A-Z]/.test(password)) return "Password must contain at least one uppercase letter";
+    if (!/[0-9]/.test(password)) return "Password must contain at least one number";
     return null;
   };
 
@@ -94,6 +97,7 @@ export default function ResetPasswordPage() {
     }
   };
 
+  // Invalid token screen
   if (!isTokenValid) {
     return (
       <Card>
@@ -127,6 +131,7 @@ export default function ResetPasswordPage() {
     );
   }
 
+  // Success screen
   if (isSubmitted) {
     return (
       <Card>
@@ -159,6 +164,7 @@ export default function ResetPasswordPage() {
     );
   }
 
+  // Main form
   return (
     <>
       <style jsx global>{`
@@ -166,16 +172,47 @@ export default function ResetPasswordPage() {
           from { opacity: 0; transform: translateY(10px); }
           to { opacity: 1; transform: translateY(0); }
         }
-        .field-group { margin-bottom: 20px; }
-        .btn-primary { width: 100%; background: ${COLORS.primary}; border: none; border-radius: 14px; padding: 14px 20px; font-weight: 600; font-size: 17px; color: ${COLORS.background}; cursor: pointer; transition: all 0.2s; margin-top: 8px; }
-        .btn-primary:hover:not(:disabled) { opacity: 0.9; transform: scale(0.98); }
-        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
-        .spinner { animation: spin 0.8s linear infinite; display: inline-block; }
         @keyframes spin {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
         }
-        .api-error { background: rgba(239, 68, 68, 0.1); border: 1px solid ${COLORS.error}; border-radius: 12px; padding: 12px 16px; margin-bottom: 20px; font-size: 13px; color: ${COLORS.error}; text-align: center; }
+        
+        .field-group { margin-bottom: 20px; }
+        .btn-primary { 
+          width: 100%; 
+          background: ${COLORS.primary}; 
+          border: none; 
+          border-radius: 14px; 
+          padding: 14px 20px; 
+          font-weight: 600; 
+          font-size: 17px; 
+          color: ${COLORS.background}; 
+          cursor: pointer; 
+          transition: all 0.2s; 
+          margin-top: 8px; 
+        }
+        .btn-primary:hover:not(:disabled) { 
+          opacity: 0.9; 
+          transform: scale(0.98); 
+        }
+        .btn-primary:disabled { 
+          opacity: 0.5; 
+          cursor: not-allowed; 
+        }
+        .spinner { 
+          animation: spin 0.8s linear infinite; 
+          display: inline-block; 
+        }
+        .api-error { 
+          background: rgba(239, 68, 68, 0.1); 
+          border: 1px solid ${COLORS.error}; 
+          border-radius: 12px; 
+          padding: 12px 16px; 
+          margin-bottom: 20px; 
+          font-size: 13px; 
+          color: ${COLORS.error}; 
+          text-align: center; 
+        }
       `}</style>
 
       <Card>
@@ -238,5 +275,26 @@ export default function ResetPasswordPage() {
         </div>
       </Card>
     </>
+  );
+}
+
+// Main exported component with Suspense boundary
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={
+      <div style={{ 
+        minHeight: "100vh", 
+        background: COLORS.background, 
+        display: "flex", 
+        alignItems: "center", 
+        justifyContent: "center",
+        color: COLORS.textPrimary,
+        fontSize: "16px"
+      }}>
+        Loading...
+      </div>
+    }>
+      <ResetPasswordContent />
+    </Suspense>
   );
 }
