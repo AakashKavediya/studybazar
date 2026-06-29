@@ -32,7 +32,7 @@ export default function ForgotPasswordPage() {
     setError("");
 
     try {
-      const response = await fetch("https://studybazaar.onrender.com/auth/forgot-password", {
+      const response = await fetch("http://localhost:8000/auth/forgot-password", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

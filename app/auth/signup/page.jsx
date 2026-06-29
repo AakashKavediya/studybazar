@@ -112,7 +112,7 @@ const submitToBackend = async () => {
 
   try {
     const response = await fetch(
-      "https://studybazaar.onrender.com/auth/signup",
+      "http://localhost:8000/auth/signup",
       {
         method: "POST",
 

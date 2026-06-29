@@ -1,7 +1,8 @@
-
 "use client";
 
 import { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { setAccessToken} from "../../../features/auth/authSlice";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { COLORS } from "@/constants/colors";
@@ -11,6 +12,7 @@ import { Button, GoogleButton } from "@/components/ui/Button";
 import { EyeIcon, EyeOffIcon } from "@/components/ui/Icons";
 
 export default function SigninPage() {
+  const dispatch = useDispatch();
   const router = useRouter();
   const [form, setForm] = useState({
     email: "",
@@ -50,86 +52,69 @@ export default function SigninPage() {
     return !validateEmail(form.email) && !validatePassword(form.password);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    // Touch all fields
-    setTouched({ email: true, password: true });
-    
-    if (!isFormValid()) return;
-    
-    setIsLoading(true);
-    setApiError("");
 
-    const payload = {
-      email: form.email.trim().toLowerCase(),
-      password: form.password,
-    };
+/*
+Function: Handle Submit
+Parameters: email, password
+Use: This function handles the form submission for user login. It validates the input fields, sends a POST request to the backend API for authentication, and manages the response. If successful, it stores the access token in Redux and redirects the user to the home page. If there's an error, it displays an appropriate error message.
+*/ 
 
-    console.log("Login payload:", payload);
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    try {
-      const response = await fetch("https://studybazaar.onrender.com/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
+  // Touch all fields
+  setTouched({
+    email: true,
+    password: true,
+  });
 
-      const responseText = await response.text();
-      console.log("Raw Response:", responseText);
+  if (!isFormValid()) return;
 
-      let data = {};
-      try {
-        data = JSON.parse(responseText);
-      } catch (err) {
-        console.error("JSON Parse Error:", err);
-      }
+  setIsLoading(true);
+  setApiError("");
 
-      console.log("Parsed Response:", data);
-
-      if (response.ok) {
-        // Store token if returned
-        if (data.access_token) {
-          localStorage.setItem("access_token", data.access_token);
-          if (rememberMe) {
-            localStorage.setItem("remember_me", "true");
-          }
-        }
-        
-        // Store user info
-        if (data.user) {
-          localStorage.setItem("user", JSON.stringify(data.user));
-        }
-        
-        // Redirect to dashboard or home
-        router.push("/");
-      } else {
-        if (data.detail) {
-          if (Array.isArray(data.detail)) {
-            const firstError = data.detail[0];
-            setApiError(firstError.msg || "Login failed");
-          } else if (typeof data.detail === "string") {
-            setApiError(data.detail);
-          } else {
-            setApiError("Invalid email or password");
-          }
-        } else {
-          setApiError(data.message || data.error || "Login failed. Please try again.");
-        }
-      }
-    } catch (error) {
-      console.error("Login error:", error);
-      setApiError("Network error. Please check your connection and try again.");
-    } finally {
-      setIsLoading(false);
-    }
+  const payload = {
+    email: form.email.trim().toLowerCase(),
+    password: form.password,
   };
+
+  try {
+    const response = await fetch("http://localhost:8000/auth/login", {
+      method: "POST",
+      credentials: "include", // Required when using HttpOnly refresh cookies
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include", // Required when using HttpOnly refresh cookies
+      body: JSON.stringify(payload),
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      // Store Access Token in Redux Memory
+      dispatch(setAccessToken(data.access_token));
+
+      // Redirect to Home
+      router.push("/");
+    } else {
+      if (Array.isArray(data.detail)) {
+        setApiError(data.detail[0].msg || "Login failed");
+      } else {
+        setApiError(data.detail || "Invalid email or password");
+      }
+    }
+  } catch (error) {
+    console.error("Login Error:", error);
+    setApiError("Network error. Please try again.");
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const handleGoogleLogin = () => {
     // Implement Google OAuth
-    window.location.href = "https://studybazaar.onrender.com/auth/google";
+    window.location.href = "http://localhost:8000/auth/google";
   };
 
   return (
