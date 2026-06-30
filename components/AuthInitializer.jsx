@@ -1,3 +1,4 @@
+// AuthInitializer.jsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -6,6 +7,7 @@ import {
     setAccessToken,
     clearAccessToken,
 } from "@/features/auth/authSlice";
+import styles from "./AuthInitializer.module.css";
 
 export default function AuthInitializer({ children }) {
     const dispatch = useDispatch();
@@ -54,34 +56,11 @@ export default function AuthInitializer({ children }) {
 
     if (loading) {
         return (
-            <div
-                style={{
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    height: "100vh",
-                    backgroundColor: "#0A0A0A",
-                    color: "#F5F5F5",
-                }}
-            >
-                <div style={{ textAlign: "center" }}>
-                    <div style={{ 
-                        width: "40px", 
-                        height: "40px", 
-                        border: "2px solid #262626",
-                        borderTop: "2px solid #F5A623",
-                        borderRadius: "50%",
-                        animation: "spin 0.8s linear infinite",
-                        margin: "0 auto 16px"
-                    }} />
-                    <p style={{ fontSize: "14px", color: "#A3A3A3" }}>Loading...</p>
+            <div className={styles.loader}>
+                <div className={styles.container}>
+                    <div className={styles.spinner} />
+                    <p className={styles.text}>Loading...</p>
                 </div>
-                <style jsx>{`
-                    @keyframes spin {
-                        from { transform: rotate(0deg); }
-                        to { transform: rotate(360deg); }
-                    }
-                `}</style>
             </div>
         );
     }

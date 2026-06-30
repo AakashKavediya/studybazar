@@ -11,6 +11,12 @@ import Field from "@/components/ui/Field";
 import { Button, GoogleButton } from "@/components/ui/Button";
 import { EyeIcon, EyeOffIcon } from "@/components/ui/Icons";
 
+// import dotenv from "dotenv";
+// dotenv.config();
+
+const LocalhostURL = process.env.localURL;
+const HostedURL = process.env.HostedURL;
+
 export default function SigninPage() {
   const dispatch = useDispatch();
   const router = useRouter();

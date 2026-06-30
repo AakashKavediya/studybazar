@@ -1,0 +1,33 @@
+/* AuthInitializer.module.css */
+.loader {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #0A0A0A;
+    color: #F5F5F5;
+}
+
+.container {
+    text-align: center;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 2px solid #262626;
+    border-top: 2px solid #F5A623;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 16px;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.text {
+    font-size: 14px;
+    color: #A3A3A3;
+}
