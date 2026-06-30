@@ -28,7 +28,7 @@ function VerifyEmailContent() {
 
     const verifyEmail = async () => {
       try {
-        const response = await fetch("http://localhost:8000/auth/verify-email", {
+        const response = await fetch("https://diplomatic-mindfulness-production-621b.up.railway.app/auth/verify-email", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

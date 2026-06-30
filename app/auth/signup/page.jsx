@@ -112,7 +112,7 @@ const submitToBackend = async () => {
 
   try {
     const response = await fetch(
-      "http://localhost:8000/auth/signup",
+      "https://diplomatic-mindfulness-production-621b.up.railway.app/auth/signup",
       {
         method: "POST",
 

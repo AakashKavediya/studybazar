@@ -79,7 +79,7 @@ const handleSubmit = async (e) => {
   };
 
   try {
-    const response = await fetch("http://localhost:8000/auth/login", {
+    const response = await fetch("https://diplomatic-mindfulness-production-621b.up.railway.app/auth/login", {
       method: "POST",
       credentials: "include", // Required when using HttpOnly refresh cookies
       headers: {
@@ -114,7 +114,7 @@ const handleSubmit = async (e) => {
 
   const handleGoogleLogin = () => {
     // Implement Google OAuth
-    window.location.href = "http://localhost:8000/auth/google";
+    window.location.href = "https://diplomatic-mindfulness-production-621b.up.railway.app/auth/google";
   };
 
   return (

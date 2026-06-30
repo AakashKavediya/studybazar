@@ -15,7 +15,7 @@ export default function AuthInitializer({ children }) {
         const restoreSession = async () => {
             try {
                 const response = await fetch(
-                    "http://localhost:8000/auth/refresh",
+                    "https://diplomatic-mindfulness-production-621b.up.railway.app/auth/refresh",
                     {
                         method: "POST",
                         credentials: "include",
