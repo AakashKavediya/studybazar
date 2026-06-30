@@ -1,7 +1,7 @@
 // components/ui/Footer.jsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { COLORS } from "@/constants/colors";
@@ -47,7 +47,8 @@ export default function Footer() {
   const pathname = usePathname();
   const [isMobile, setIsMobile] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
+  const lastScrollY = useRef(0);
+  const timeoutRef = useRef(null);
 
   useEffect(() => {
     const checkScreenSize = () => {
@@ -57,16 +58,30 @@ export default function Footer() {
     checkScreenSize();
     window.addEventListener("resize", checkScreenSize);
     
-    // Auto-hide footer on scroll for mobile
+    // Optimized scroll handler with throttling
     const handleScroll = () => {
       if (!isMobile) return;
-      const currentScrollY = window.scrollY;
-      if (currentScrollY > lastScrollY && currentScrollY > 100) {
-        setIsVisible(false);
-      } else {
-        setIsVisible(true);
+      
+      // Cancel previous timeout
+      if (timeoutRef.current) {
+        cancelAnimationFrame(timeoutRef.current);
       }
-      setLastScrollY(currentScrollY);
+      
+      // Use requestAnimationFrame for smooth performance
+      timeoutRef.current = requestAnimationFrame(() => {
+        const currentScrollY = window.scrollY;
+        const scrollDelta = currentScrollY - lastScrollY.current;
+        
+        // Only update if significant scroll
+        if (Math.abs(scrollDelta) > 5) {
+          if (scrollDelta > 0 && currentScrollY > 100) {
+            setIsVisible(false);
+          } else {
+            setIsVisible(true);
+          }
+          lastScrollY.current = currentScrollY;
+        }
+      });
     };
     
     window.addEventListener("scroll", handleScroll, { passive: true });
@@ -74,8 +89,11 @@ export default function Footer() {
     return () => {
       window.removeEventListener("resize", checkScreenSize);
       window.removeEventListener("scroll", handleScroll);
+      if (timeoutRef.current) {
+        cancelAnimationFrame(timeoutRef.current);
+      }
     };
-  }, [isMobile, lastScrollY]);
+  }, [isMobile]); // Only re-run when isMobile changes
 
   const navItems = [
     { path: "/", label: "Home", icon: HomeIcon },
@@ -95,7 +113,10 @@ export default function Footer() {
 
   return (
     <>
-      <div className={`floating-footer-container ${isVisible ? "visible" : "hidden"}`}>
+      <div 
+        className={`floating-footer-container ${isVisible ? "visible" : "hidden"}`}
+        style={{ willChange: 'transform, opacity' }}
+      >
         <div className="floating-footer-island">
           {navItems.map((item) => {
             const Icon = item.icon;
@@ -105,6 +126,7 @@ export default function Footer() {
                 key={item.path}
                 href={item.path}
                 className={`footer-link ${active ? "active" : ""}`}
+                prefetch={false} // Optimize navigation
               >
                 <div className="footer-icon-wrapper">
                   <Icon active={active} />
@@ -130,7 +152,9 @@ export default function Footer() {
           display: flex;
           justify-content: center;
           pointer-events: none;
-          transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+          transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), 
+                      opacity 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+          will-change: transform, opacity;
         }
         
         .floating-footer-container.visible {
@@ -159,6 +183,7 @@ export default function Footer() {
           box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
           width: 95%;
           max-width: 95vw;
+          will-change: transform;
         }
         
         .footer-link {
