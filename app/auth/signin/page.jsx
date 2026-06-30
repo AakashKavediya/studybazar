@@ -60,56 +60,54 @@ Use: This function handles the form submission for user login. It validates the 
 */ 
 
 const handleSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  // Touch all fields
-  setTouched({
-    email: true,
-    password: true,
-  });
-
-  if (!isFormValid()) return;
-
-  setIsLoading(true);
-  setApiError("");
-
-  const payload = {
-    email: form.email.trim().toLowerCase(),
-    password: form.password,
-  };
-
-  try {
-    const response = await fetch("https://diplomatic-mindfulness-production-621b.up.railway.app/auth/login", {
-      method: "POST",
-      credentials: "include", // Required when using HttpOnly refresh cookies
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include", // Required when using HttpOnly refresh cookies
-      body: JSON.stringify(payload),
+    setTouched({
+        email: true,
+        password: true,
     });
 
-    const data = await response.json();
+    if (!isFormValid()) return;
 
-    if (response.ok) {
-      // Store Access Token in Redux Memory
-      dispatch(setAccessToken(data.access_token));
+    setIsLoading(true);
+    setApiError("");
 
-      // Redirect to Home
-      router.push("/");
-    } else {
-      if (Array.isArray(data.detail)) {
-        setApiError(data.detail[0].msg || "Login failed");
-      } else {
-        setApiError(data.detail || "Invalid email or password");
-      }
+    const payload = {
+        email: form.email.trim().toLowerCase(),
+        password: form.password,
+    };
+
+    try {
+        const response = await fetch(
+            "https://diplomatic-mindfulness-production-621b.up.railway.app/auth/login",
+            {
+                method: "POST",
+                credentials: "include", // Only need this once
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(payload),
+            }
+        );
+
+        const data = await response.json();
+
+        if (response.ok) {
+            dispatch(setAccessToken(data.access_token));
+            router.push("/");
+        } else {
+            if (Array.isArray(data.detail)) {
+                setApiError(data.detail[0].msg || "Login failed");
+            } else {
+                setApiError(data.detail || "Invalid email or password");
+            }
+        }
+    } catch (error) {
+        console.error("Login Error:", error);
+        setApiError("Network error. Please try again.");
+    } finally {
+        setIsLoading(false);
     }
-  } catch (error) {
-    console.error("Login Error:", error);
-    setApiError("Network error. Please try again.");
-  } finally {
-    setIsLoading(false);
-  }
 };
 
   const handleGoogleLogin = () => {
