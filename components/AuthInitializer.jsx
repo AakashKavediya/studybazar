@@ -1,4 +1,4 @@
-// AuthInitializer.jsx
+// components/AuthInitializer.jsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -6,19 +6,22 @@ import { useDispatch } from "react-redux";
 import {
     setAccessToken,
     clearAccessToken,
+    setUser,
+    setLoading,
 } from "@/features/auth/authSlice";
-import styles from "./AuthInitializer.module.css";
+import { fetchUserProfile } from "@/services/profileService";
 
 export default function AuthInitializer({ children }) {
     const dispatch = useDispatch();
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoadingState] = useState(true);
 
     useEffect(() => {
         const restoreSession = async () => {
             try {
                 console.log("🔄 Restoring session...");
                 
-                const response = await fetch(
+                // Step 1: Refresh access token
+                const refreshResponse = await fetch(
                     "https://diplomatic-mindfulness-production-621b.up.railway.app/auth/refresh",
                     {
                         method: "POST",
@@ -29,25 +32,36 @@ export default function AuthInitializer({ children }) {
                     }
                 );
 
-                console.log("📡 Refresh Status:", response.status);
+                console.log("📡 Refresh Status:", refreshResponse.status);
 
-                if (response.ok) {
-                    const data = await response.json();
-                    console.log("✅ Refresh Success:", data);
-                    if (data.access_token) {
-                        dispatch(setAccessToken(data.access_token));
+                if (refreshResponse.ok) {
+                    const refreshData = await refreshResponse.json();
+                    const accessToken = refreshData.access_token;
+                    
+                    if (accessToken) {
+                        // Step 2: Set access token in Redux
+                        dispatch(setAccessToken(accessToken));
                         console.log("🔑 Access token set in Redux");
+                        
+                        // Step 3: Fetch user profile
+                        try {
+                            const userData = await fetchUserProfile(accessToken);
+                            dispatch(setUser(userData));
+                            console.log("👤 User profile loaded:", userData.name);
+                        } catch (profileError) {
+                            console.error("❌ Failed to fetch profile:", profileError);
+                            // Keep token but no user data
+                        }
                     }
                 } else {
-                    const errorData = await response.json().catch(() => ({}));
-                    console.log("❌ Refresh failed:", response.status, errorData);
+                    console.log("❌ Refresh failed, clearing session");
                     dispatch(clearAccessToken());
                 }
             } catch (error) {
-                console.error("❌ Refresh Error:", error);
+                console.error("❌ Auth Error:", error);
                 dispatch(clearAccessToken());
             } finally {
-                setLoading(false);
+                setLoadingState(false);
             }
         };
 
@@ -56,10 +70,10 @@ export default function AuthInitializer({ children }) {
 
     if (loading) {
         return (
-            <div className={styles.loader}>
-                <div className={styles.container}>
-                    <div className={styles.spinner} />
-                    <p className={styles.text}>Loading...</p>
+            <div className="flex justify-center items-center h-screen bg-[#0A0A0A] text-[#F5F5F5]">
+                <div className="text-center">
+                    <div className="w-10 h-10 border-2 border-[#262626] border-t-[#F5A623] rounded-full animate-spin mx-auto mb-4" />
+                    <p className="text-sm text-[#A3A3A3]">Loading...</p>
                 </div>
             </div>
         );

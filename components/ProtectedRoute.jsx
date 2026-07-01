@@ -1,3 +1,4 @@
+// components/ProtectedRoute.jsx
 "use client";
 
 import { useEffect } from "react";
@@ -6,20 +7,20 @@ import { useRouter } from "next/navigation";
 
 export default function ProtectedRoute({ children }) {
     const router = useRouter();
-    const accessToken = useSelector((state) => state.auth.accessToken);
+    const { accessToken, user } = useSelector((state) => state.auth);
 
     useEffect(() => {
         if (!accessToken) {
             console.log("🚫 No access token, redirecting to login");
             router.replace("/auth/signin");
-        } else {
-            console.log("✅ Access token present, showing protected content");
+        } else if (user) {
+            console.log("✅ User authenticated:", user.name);
         }
-    }, [accessToken, router]);
+    }, [accessToken, user, router]);
 
     if (!accessToken) {
         return null;
     }
 
     return children;
-} 
+}
