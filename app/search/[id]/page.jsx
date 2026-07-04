@@ -15,42 +15,6 @@ const API_URL =
   process.env.NEXT_PUBLIC_API_URL ||
   "https://diplomatic-mindfulness-production-621b.up.railway.app";
 
-// Placeholder Data
-const PLACEHOLDER_DATA = {
-  id: "6a458390d5a2855d3db64645",
-  name: "Aakash Kavediya",
-  email: "aakash@example.com",
-  phone: "+91 98765 43210",
-  campus: "KJ Somaiya College of Engineering",
-  branch: "Computer Science Engineering",
-  year: 3,
-  bio: "Passionate about learning and sharing knowledge. I create study notes and resources for engineering students. Currently exploring AI and ML.",
-  profile_image: "https://res.cloudinary.com/dtdivzyct/image/upload/v1782945334/dqq3vkaulll7k3cbssti.jpg",
-  social_links: {
-    github: "https://github.com/aakash",
-    twitter: "https://twitter.com/aakash",
-    linkedin: "https://linkedin.com/in/aakash",
-    website: "https://aakash.dev",
-  },
-  skills: ["React", "Python", "Machine Learning", "FastAPI", "MongoDB", "Next.js"],
-  created_at: "2024-06-01T00:00:00.000Z",
-  rating: 4.8,
-  total_reviews: 12,
-  products_sold_count: 24,
-  active_listings_count: 12,
-  followers_count: 156,
-  following_count: 45,
-  is_verified: true,
-  productsListed: [
-    { id: 1, title: "Data Structures Notes", price: "₹299", category: "notes", image: "https://i.pinimg.com/736x/e7/e5/44/e7e5446faff0d3dec1349dbf4806fe50.jpg" },
-    { id: 2, title: "Algorithm Cheat Sheet", price: "₹199", category: "notes", image: "https://i.pinimg.com/736x/93/49/3e/93493e9666cd1a600cd214986e18c256.jpg" },
-    { id: 3, title: "Python Programming Guide", price: "₹399", category: "books", image: "https://i.pinimg.com/736x/bc/b1/d1/bcb1d1f579fb6a9ebde33e365ceed123.jpg" },
-    { id: 4, title: "Machine Learning Basics", price: "₹499", category: "books", image: "https://i.pinimg.com/1200x/98/13/74/98137436a171703977c5e9321dc2bac4.jpg" },
-    { id: 5, title: "Database Management Notes", price: "₹349", category: "notes", image: "https://i.pinimg.com/736x/bf/23/db/bf23db07df26095a83cc081f77d94f2b.jpg" },
-    { id: 6, title: "Web Development Course", price: "₹599", category: "lab", image: "https://i.pinimg.com/736x/3c/ef/0b/3cef0b0a61baa4210b33afc13b2a381e.jpg" },
-  ],
-};
-
 export default function SearchProfilePage() {
   const router = useRouter();
   const params = useParams();
@@ -58,37 +22,92 @@ export default function SearchProfilePage() {
   const { accessToken, user: currentUser } = useSelector((state) => state.auth);
 
   const [profile, setProfile] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [isOwnProfile, setIsOwnProfile] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
   const [isFollowLoading, setIsFollowLoading] = useState(false);
   const [products, setProducts] = useState([]);
+  const [error, setError] = useState(null);
 
-  // Load placeholder data on mount
-  useEffect(() => {
-    // Check if the ID matches the placeholder ID
-    if (userId === PLACEHOLDER_DATA.id) {
-      const currentUserId = String(currentUser?.id || "");
-      const placeholderId = String(PLACEHOLDER_DATA.id || "");
-      const isOwn = currentUserId !== "" && currentUserId === placeholderId;
-
-      setIsOwnProfile(isOwn);
-      setProfile(PLACEHOLDER_DATA);
-      setProducts(PLACEHOLDER_DATA.productsListed || []);
+  // Fetch profile data from API
+  const fetchProfile = useCallback(async () => {
+    if (!userId) {
       setIsLoading(false);
+      return;
+    }
 
-      if (isOwn) {
-        router.replace("/profile");
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const headers = accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
+      
+      const response = await axios.get(`${API_URL}/users/${userId}`, {
+        headers,
+        withCredentials: true,
+      });
+
+      if (response.data?.user) {
+        const userData = response.data.user;
+        setProfile(userData);
+
+        // Check if this is the current user's profile
+        const currentUserId = String(currentUser?.id || "");
+        const profileId = String(userData.id || "");
+        const isOwn = currentUserId !== "" && currentUserId === profileId;
+
+        setIsOwnProfile(isOwn);
+        setIsFollowing(userData.is_following || false);
+
+        // If it's own profile, redirect to /profile
+        if (isOwn) {
+          router.replace("/profile");
+        }
+      } else {
+        setError("User not found");
       }
-    } else {
-      // If different ID, you would fetch from API here
-      // For now, show a message
+    } catch (err) {
+      console.error("Error fetching profile:", err);
+      if (err.response?.status === 404) {
+        setError("User not found");
+      } else {
+        setError("Failed to load profile. Please try again.");
+      }
       setProfile(null);
+    } finally {
       setIsLoading(false);
     }
-  }, [userId, currentUser, router]);
+  }, [userId, accessToken, currentUser, router]);
 
-  // Memoize user data
+  // Fetch user products
+  const fetchProducts = useCallback(async () => {
+    if (!userId) return;
+
+    try {
+      const headers = accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
+      
+      // You'll need to implement this endpoint later
+      const response = await axios.get(`${API_URL}/users/${userId}/products`, {
+        headers,
+        withCredentials: true,
+      });
+
+      if (response.data?.products) {
+        setProducts(response.data.products);
+      }
+    } catch (err) {
+      console.error("Error fetching products:", err);
+      // Don't set error for products - just show empty
+      setProducts([]);
+    }
+  }, [userId, accessToken]);
+
+  useEffect(() => {
+    fetchProfile();
+    fetchProducts();
+  }, [fetchProfile, fetchProducts]);
+
+  // Memoize user data with defaults
   const userData = useMemo(
     () =>
       profile || {
@@ -124,24 +143,34 @@ export default function SearchProfilePage() {
 
     setIsFollowLoading(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      setIsFollowing((prev) => !prev);
-      setProfile((prev) =>
-        prev
-          ? {
-              ...prev,
-              followers_count: isFollowing
-                ? Math.max((prev.followers_count || 1) - 1, 0)
-                : (prev.followers_count || 0) + 1,
-            }
-          : prev
-      );
-    } catch (error) {
-      console.error("Error following/unfollowing:", error);
+      const endpoint = isFollowing ? "unfollow" : "follow";
+      const response = await axios({
+        method: isFollowing ? "DELETE" : "POST",
+        url: `${API_URL}/users/${userId}/${endpoint}`,
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        withCredentials: true,
+      });
+
+      if (response.data?.data) {
+        setIsFollowing(!isFollowing);
+        setProfile((prev) =>
+          prev
+            ? {
+                ...prev,
+                followers_count: response.data.data.followers_count,
+              }
+            : prev
+        );
+      }
+    } catch (err) {
+      console.error("Error following/unfollowing:", err);
+      alert(err.response?.data?.detail || "Failed to update follow status");
     } finally {
       setIsFollowLoading(false);
     }
-  }, [isFollowing, accessToken, router]);
+  }, [userId, isFollowing, accessToken, router]);
 
   // Handle message
   const handleMessage = useCallback(() => {
@@ -177,6 +206,7 @@ export default function SearchProfilePage() {
     router.push("/profile/edit");
   }, [router]);
 
+  // Loading state
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[#0A0A0A]">
@@ -189,7 +219,8 @@ export default function SearchProfilePage() {
     );
   }
 
-  if (!profile) {
+  // Error state
+  if (error || !profile) {
     return (
       <div className="min-h-screen bg-[#0A0A0A]">
         <Header />
@@ -198,8 +229,14 @@ export default function SearchProfilePage() {
             <div className="w-20 h-20 rounded-full bg-[#1A1A1A] flex items-center justify-center mx-auto mb-4">
               <span className="text-3xl">👤</span>
             </div>
-            <p className="text-white text-lg font-medium">User not found</p>
-            <p className="text-[#666666] text-sm mt-1">The user you're looking for doesn't exist</p>
+            <p className="text-white text-lg font-medium">
+              {error === "User not found" ? "User not found" : "Something went wrong"}
+            </p>
+            <p className="text-[#666666] text-sm mt-1">
+              {error === "User not found"
+                ? "The user you're looking for doesn't exist"
+                : "Please try again later"}
+            </p>
             <button
               className="mt-4 text-[#F5A623] hover:underline"
               onClick={handleBack}
@@ -216,7 +253,7 @@ export default function SearchProfilePage() {
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-[#F5F5F5] pb-20">
       <Header />
-      
+
       <div className="max-w-[1200px] mx-auto px-5 py-5 pb-10">
         <ProfileHero
           userData={userData}
