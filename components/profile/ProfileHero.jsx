@@ -21,6 +21,10 @@ import ProfileSocialLinks from "@/components/ui/ProfileSocialLinks";
 import ProfileActions from "@/components/ui/ProfileActions";
 import ImageUploadModal from "@/components/ui/ImageUploadModal";
 
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  "https://diplomatic-mindfulness-production-621b.up.railway.app";
+
 function ProfileHero({
   userData,
   isOwnProfile,
@@ -33,6 +37,7 @@ function ProfileHero({
   const { accessToken } = useSelector((state) => state.auth);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isFollowLoading, setIsFollowLoading] = useState(false);
 
   // Memoize social links - filter out invalid URLs
   const socialLinks = useMemo(() => {
@@ -79,6 +84,40 @@ function ProfileHero({
     userData.skills || [],
     [userData.skills]
   );
+
+  // Handle follow/unfollow
+  const handleFollow = useCallback(async () => {
+    if (!accessToken) {
+      router.push("/auth/signin");
+      return;
+    }
+
+    setIsFollowLoading(true);
+    try {
+      const endpoint = isFollowing ? "unfollow" : "follow";
+      const response = await axios({
+        method: isFollowing ? "DELETE" : "POST",
+        url: `${API_URL}/users/${userData.id}/${endpoint}`,
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        withCredentials: true,
+      });
+
+      if (response.data?.data) {
+        setIsFollowing(!isFollowing);
+        // Update the user data with new followers count
+        if (response.data.data.followers_count !== undefined) {
+          // You can update the Redux store or local state here
+        }
+      }
+    } catch (err) {
+      console.error("Error following/unfollowing:", err);
+      alert(err.response?.data?.detail || "Failed to update follow status");
+    } finally {
+      setIsFollowLoading(false);
+    }
+  }, [userData.id, isFollowing, accessToken]);
 
   // Handle image upload
   const handleImageUpload = useCallback(async (file) => {
@@ -219,19 +258,23 @@ function ProfileHero({
             isOwnProfile={isOwnProfile}
             isFollowing={isFollowing}
             setIsFollowing={setIsFollowing}
+            isLoading={isFollowLoading}
             onEditClick={onEditClick}
             onShareClick={onShareClick}
+            onFollow={handleFollow}
           />
         </div>
       </div>
 
-      {/* Image Upload Modal */}
-      <ImageUploadModal
-        isOpen={showUploadModal}
-        onClose={() => setShowUploadModal(false)}
-        onUpload={handleImageUpload}
-        isLoading={isUploading}
-      />
+      {/* Image Upload Modal - Only for own profile */}
+      {isOwnProfile && (
+        <ImageUploadModal
+          isOpen={showUploadModal}
+          onClose={() => setShowUploadModal(false)}
+          onUpload={handleImageUpload}
+          isLoading={isUploading}
+        />
+      )}
     </>
   );
 }
