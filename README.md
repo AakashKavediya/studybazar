@@ -4,7 +4,6 @@
 <!--                    ANIMATED BANNER                   -->
 <!-- ████████████████████████████████████████████████████ -->
 
-<img src="./assets/banner.svg" alt="StudyBazar — The Student Marketplace" width="100%" style="border-radius:12px"/>
 
 <br/>
 
