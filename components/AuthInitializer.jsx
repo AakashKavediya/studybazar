@@ -22,7 +22,7 @@ export default function AuthInitializer({ children }) {
                 
                 // Step 1: Refresh access token
                 const refreshResponse = await fetch(
-                    "https://diplomatic-mindfulness-production-621b.up.railway.app/auth/refresh",
+                    "http://127.0.0.1:8000/auth/refresh",
                     {
                         method: "POST",
                         credentials: "include",

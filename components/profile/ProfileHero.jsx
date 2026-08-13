@@ -23,7 +23,7 @@ import ImageUploadModal from "@/components/ui/ImageUploadModal";
 
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL ||
-  "https://diplomatic-mindfulness-production-621b.up.railway.app";
+  "http://127.0.0.1:8000";
 
 function ProfileHero({
   userData,
@@ -145,7 +145,7 @@ function ProfileHero({
       console.log('✅ Uploaded to Cloudinary:', imageUrl);
 
       // Step 2: Update profile using the dedicated POST /users/profile_image endpoint
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://diplomatic-mindfulness-production-621b.up.railway.app';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
       
       const updateResponse = await axios.post(
         `${apiUrl}/users/profile_image`,

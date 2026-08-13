@@ -149,7 +149,7 @@ export default function ProfilePage() {
     const handleLogout = useCallback(async () => {
         try {
             const response = await fetch(
-                "https://diplomatic-mindfulness-production-621b.up.railway.app/auth/logout",
+                "http://127.0.0.1:8000/auth/logout",
                 {
                     method: "POST",
                     credentials: "include",

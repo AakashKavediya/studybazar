@@ -1,10 +1,6 @@
 /** @type {import('next').NextConfig} */
-
-
-
 const nextConfig = {
-
-    images: {
+  images: {
     remotePatterns: [
       {
         protocol: 'https',
@@ -24,6 +20,12 @@ const nextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+        port: '',
+        pathname: '/**',
+      },
     ],
     formats: ['image/avif', 'image/webp'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
@@ -31,9 +33,10 @@ const nextConfig = {
     minimumCacheTTL: 60,
     qualities: [70, 75, 80, 90],
   },
-
-
-  /* config options here */
+  // ✅ ADD THIS BLOCK RIGHT HERE:
+  compiler: {
+    styledComponents: true, // This allows Next.js to process the <style jsx> tags
+  },
   reactCompiler: true,
 };
 

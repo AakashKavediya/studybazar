@@ -10,7 +10,7 @@ export default function DebugPage() {
         const checkCookies = async () => {
             try {
                 const response = await fetch(
-                    "https://diplomatic-mindfulness-production-621b.up.railway.app/auth/debug-cookies",
+                    "http://127.0.0.1:8000/auth/debug-cookies",
                     {
                         credentials: "include",
                     }

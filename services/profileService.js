@@ -1,6 +1,6 @@
 // services/profileService.js
 
-const API_BASE_URL = "https://diplomatic-mindfulness-production-621b.up.railway.app";
+const API_BASE_URL = "http://127.0.0.1:8000";
 
 // Get current user profile
 export async function fetchUserProfile(accessToken) {

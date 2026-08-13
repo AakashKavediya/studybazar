@@ -13,7 +13,7 @@ import { ProfileHero, ProfileSkeleton } from "@/components/search_profile";
 
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL ||
-  "https://diplomatic-mindfulness-production-621b.up.railway.app";
+  "http://127.0.0.1:8000";
 
 export default function SearchProfilePage() {
   const router = useRouter();

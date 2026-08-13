@@ -85,7 +85,7 @@ const handleSubmit = async (e) => {
 
     try {
         const response = await fetch(
-            "https://diplomatic-mindfulness-production-621b.up.railway.app/auth/login",
+            "http://127.0.0.1:8000/auth/login",
             {
                 method: "POST",
                 credentials: "include", // Only need this once
@@ -118,7 +118,7 @@ const handleSubmit = async (e) => {
 
   const handleGoogleLogin = () => {
     // Implement Google OAuth
-    window.location.href = "https://diplomatic-mindfulness-production-621b.up.railway.app/auth/google";
+    window.location.href = "http://127.0.0.1:8000/auth/google";
   };
 
   return (

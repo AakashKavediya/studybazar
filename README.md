@@ -942,7 +942,7 @@ border-color:  #FFFFFF;
 ### 🌐 Base URL
 
 ```
-https://diplomatic-mindfulness-production-621b.up.railway.app
+http://127.0.0.1:8000
 ```
 
 ### 🔐 Auth Endpoints

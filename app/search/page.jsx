@@ -13,7 +13,7 @@ import SearchHeader from "../../components/search/SearchHeader";
 import SearchResults from "../../components/search/SearchResults";
 
 // Constants
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://diplomatic-mindfulness-production-621b.up.railway.app';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
 
 // Main Search Component
 function SearchContent() {
