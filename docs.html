@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>StudyMart — Documentation</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<style>
+:root{
+  --orange:#FF6B1A; --orange-hot:#FF8C42; --orange-deep:#CC4E00;
+  --orange-glow:rgba(255,107,26,.16); --orange-line:rgba(255,107,26,.32);
+  --black:#0E0E0E; --black-card:#141414; --black-raised:#1A1A1A;
+  --black-border:#252525; --black-hover:#1F1F1F;
+  --white:#F5F0EB; --white-dim:#B0A89E; --white-muted:#6B6059;
+  --font-head:'Syne',sans-serif; --font-body:'Outfit',sans-serif; --font-mono:'DM Mono',monospace;
+  --green:#50C878; --blue:#4A9EFF;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--black);color:var(--white);font-family:var(--font-body);font-size:15px;line-height:1.7;overflow-x:hidden;}
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  opacity:.026;pointer-events:none;z-index:9999;
+}
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:var(--black);}
+::-webkit-scrollbar-thumb{background:var(--orange-deep);border-radius:2px;}
+code{font-family:var(--font-mono);color:var(--orange);background:var(--black-raised);padding:2px 8px;border-radius:4px;font-size:.85em;}
+
+/* progress + toc rail */
+#progress{position:fixed;top:0;left:0;height:2px;background:linear-gradient(90deg,var(--orange-deep),var(--orange-hot));z-index:200;width:0%;}
+
+nav{
+  position:sticky;top:0;z-index:100;background:rgba(14,14,14,.9);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--black-border);padding:14px 40px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.nav-logo{display:flex;align-items:center;gap:10px;font-family:var(--font-head);font-weight:800;font-size:18px;letter-spacing:-.5px;}
+.nav-logo .icon{width:32px;height:32px;background:var(--orange);border-radius:8px;display:grid;place-items:center;font-size:15px;color:#000;}
+.nav-links{display:flex;gap:4px;flex-wrap:wrap;}
+.nav-links a{
+  color:var(--white-muted);text-decoration:none;font-size:11px;font-family:var(--font-mono);
+  padding:5px 10px;border-radius:4px;border:1px solid transparent;transition:all .2s;
+  letter-spacing:.04em;text-transform:uppercase;
+}
+.nav-links a:hover,.nav-links a.active{color:var(--orange);border-color:var(--orange-line);background:var(--orange-glow);}
+.burger{display:none;color:var(--white);font-size:18px;cursor:pointer;background:none;border:none;}
+
+/* HERO */
+.hero{min-height:88vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:80px 40px 60px;position:relative;overflow:hidden;}
+.hero-grid{
+  position:absolute;inset:0;
+  background-image:linear-gradient(var(--black-border) 1px,transparent 1px),linear-gradient(90deg,var(--black-border) 1px,transparent 1px);
+  background-size:60px 60px;mask-image:radial-gradient(ellipse 80% 60% at 50% 50%,black 30%,transparent 100%);opacity:.5;
+}
+.hero-glow{position:absolute;top:-120px;left:50%;transform:translateX(-50%);width:700px;height:500px;background:radial-gradient(ellipse,rgba(255,107,26,.22) 0%,transparent 70%);pointer-events:none;}
+.hero-content{position:relative;z-index:1;max-width:820px;}
+.hero-badge{
+  display:inline-flex;align-items:center;gap:8px;background:var(--black-raised);border:1px solid var(--orange-line);
+  padding:6px 16px;border-radius:100px;font-size:11px;font-family:var(--font-mono);color:var(--orange);
+  text-transform:uppercase;letter-spacing:.12em;margin-bottom:28px;opacity:0;animation:fadeUp .7s .1s ease forwards;
+}
+.hero-badge .dot{width:6px;height:6px;background:var(--orange);border-radius:50%;animation:pulse 2s infinite;}
+.hero h1{font-family:var(--font-head);font-weight:800;font-size:clamp(48px,8.5vw,92px);line-height:.95;letter-spacing:-3px;opacity:0;animation:fadeUp .7s .2s ease forwards;}
+.hero h1 .gradient{background:linear-gradient(135deg,var(--orange-hot) 0%,var(--orange) 50%,var(--orange-deep) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.hero h1 .outline{-webkit-text-stroke:2px rgba(255,255,255,.15);-webkit-text-fill-color:transparent;}
+.hero-sub{font-size:17px;color:var(--white-dim);font-weight:300;max-width:600px;margin:24px auto 0;line-height:1.65;opacity:0;animation:fadeUp .7s .3s ease forwards;}
+.hero-ctas{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:40px;opacity:0;animation:fadeUp .7s .4s ease forwards;}
+.btn-primary{background:var(--orange);color:#000;padding:12px 28px;border-radius:8px;font-family:var(--font-head);font-weight:700;font-size:13px;text-decoration:none;letter-spacing:.02em;transition:all .2s;}
+.btn-primary:hover{background:var(--orange-hot);transform:translateY(-2px);box-shadow:0 8px 30px rgba(255,107,26,.4);}
+.btn-outline{background:transparent;color:var(--white);padding:12px 28px;border-radius:8px;border:1px solid var(--black-border);font-family:var(--font-head);font-weight:600;font-size:13px;text-decoration:none;letter-spacing:.02em;transition:all .2s;}
+.btn-outline:hover{border-color:var(--orange-line);color:var(--orange);background:var(--orange-glow);transform:translateY(-2px);}
+.hero-stats{display:flex;justify-content:center;gap:48px;margin-top:60px;padding-top:40px;border-top:1px solid var(--black-border);flex-wrap:wrap;opacity:0;animation:fadeUp .7s .5s ease forwards;}
+.hero-stat{text-align:center;}
+.hero-stat .val{font-family:var(--font-head);font-weight:800;font-size:26px;color:var(--orange);line-height:1;}
+.hero-stat .lbl{font-size:11px;color:var(--white-muted);text-transform:uppercase;letter-spacing:.1em;margin-top:4px;}
+
+section{padding:80px 40px;max-width:1100px;margin:0 auto;}
+.section-label{font-family:var(--font-mono);font-size:11px;color:var(--orange);text-transform:uppercase;letter-spacing:.16em;margin-bottom:12px;display:flex;align-items:center;gap:10px;}
+.section-label::before{content:'';width:24px;height:1px;background:var(--orange);}
+h2{font-family:var(--font-head);font-weight:800;font-size:clamp(28px,4vw,40px);letter-spacing:-1.5px;line-height:1.1;margin-bottom:16px;}
+.section-desc{color:var(--white-dim);font-size:15px;max-width:620px;margin-bottom:48px;font-weight:300;}
+.divider{height:1px;background:linear-gradient(90deg,transparent,var(--black-border) 30%,var(--black-border) 70%,transparent);margin:0 40px;}
+
+.badges{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:40px;}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:6px;font-size:11.5px;font-family:var(--font-mono);border:1px solid;}
+.badge-orange{background:var(--orange-glow);color:var(--orange);border-color:var(--orange-line);}
+.badge-blue{background:rgba(74,158,255,.1);color:var(--blue);border-color:rgba(74,158,255,.3);}
+.badge-green{background:rgba(80,200,120,.1);color:var(--green);border-color:rgba(80,200,120,.3);}
+
+/* ===== SIGNATURE: Token lifecycle diagram ===== */
+.token-wrap{background:var(--black-card);border:1px solid var(--black-border);border-radius:16px;overflow:hidden;}
+.token-header{background:var(--black-raised);padding:14px 20px;border-bottom:1px solid var(--black-border);display:flex;align-items:center;gap:8px;}
+.token-dot{width:10px;height:10px;border-radius:50%;}
+.token-dot:nth-child(1){background:#FF5F57;} .token-dot:nth-child(2){background:#FEBC2E;} .token-dot:nth-child(3){background:#28C840;}
+.token-title{font-family:var(--font-mono);font-size:11px;color:var(--white-muted);margin-left:6px;}
+.token-body{padding:40px;display:flex;align-items:center;gap:24px;flex-wrap:wrap;justify-content:center;}
+.token-card{
+  width:190px;background:var(--black-raised);border:1px solid var(--black-border);border-radius:12px;padding:20px;
+  text-align:center;position:relative;
+}
+.token-card .tlabel{font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--white-muted);margin-bottom:10px;}
+.token-card .tval{font-family:var(--font-head);font-weight:800;font-size:20px;color:var(--white);}
+.token-bar{width:100%;height:5px;background:var(--black-border);border-radius:3px;margin-top:14px;overflow:hidden;}
+.token-bar-fill{height:100%;background:linear-gradient(90deg,var(--orange-deep),var(--orange-hot));width:100%;animation:drain 6s linear infinite;transform-origin:left;}
+@keyframes drain{0%{width:100%;}100%{width:0%;}}
+.token-arrow{font-family:var(--font-mono);color:var(--orange);font-size:20px;display:flex;flex-direction:column;align-items:center;gap:4px;}
+.token-arrow span{font-size:9px;color:var(--white-muted);text-transform:uppercase;letter-spacing:.08em;}
+.token-refresh{border-color:var(--orange-line);}
+.token-refresh .tval{color:var(--orange);}
+.token-note{padding:20px 40px 32px;font-size:12.5px;color:var(--white-muted);border-top:1px dashed var(--black-border);font-family:var(--font-mono);line-height:1.7;}
+
+/* feature grid */
+.feature-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:2px;background:var(--black-border);border:1px solid var(--black-border);border-radius:16px;overflow:hidden;}
+.feature-card{background:var(--black-card);padding:32px;transition:background .2s;position:relative;overflow:hidden;}
+.feature-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--orange),transparent);opacity:0;transition:opacity .3s;}
+.feature-card:hover{background:var(--black-hover);}
+.feature-card:hover::before{opacity:1;}
+.feature-icon{width:44px;height:44px;border-radius:10px;background:var(--orange-glow);border:1px solid var(--orange-line);display:grid;place-items:center;font-size:20px;margin-bottom:18px;}
+.feature-card h3{font-family:var(--font-head);font-weight:700;font-size:16px;margin-bottom:10px;letter-spacing:-.3px;}
+.feature-card p{color:var(--white-dim);font-size:13.5px;line-height:1.65;}
+.feature-tag{display:inline-block;margin-top:14px;font-family:var(--font-mono);font-size:10px;color:var(--orange);background:var(--orange-glow);border:1px solid var(--orange-line);padding:3px 10px;border-radius:4px;text-transform:uppercase;letter-spacing:.08em;}
+
+/* architecture */
+.arch-wrap{background:var(--black-card);border:1px solid var(--black-border);border-radius:16px;overflow:hidden;}
+.arch-header{background:var(--black-raised);padding:14px 20px;border-bottom:1px solid var(--black-border);display:flex;align-items:center;gap:8px;}
+.arch-title{font-family:var(--font-mono);font-size:11px;color:var(--white-muted);margin-left:6px;}
+.arch-body{padding:32px;}
+.arch-layer{border:1px solid var(--black-border);border-radius:12px;padding:20px 24px;margin-bottom:10px;transition:border-color .2s;}
+.arch-layer:hover{border-color:var(--orange-line);}
+.arch-layer-label{font-family:var(--font-mono);font-size:10px;color:var(--white-muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;}
+.arch-layer-label span{color:var(--orange);}
+.arch-boxes{display:flex;gap:10px;flex-wrap:wrap;}
+.arch-box{background:var(--black-raised);border:1px solid var(--black-border);border-radius:8px;padding:10px 16px;font-size:12.5px;font-family:var(--font-mono);transition:all .2s;}
+.arch-box span{display:block;font-size:10px;color:var(--white-muted);margin-top:2px;}
+.arch-box:hover{border-color:var(--orange-line);color:var(--orange);background:var(--orange-glow);}
+.arch-connector{display:flex;justify-content:center;align-items:center;gap:12px;margin:4px 0;opacity:.5;}
+.arch-connector-line{flex:1;height:1px;background:var(--black-border);max-width:200px;}
+.arch-connector-label{font-family:var(--font-mono);font-size:10px;color:var(--white-muted);}
+
+/* folder */
+.folder-wrap{background:var(--black-card);border:1px solid var(--black-border);border-radius:16px;overflow:hidden;}
+.folder-header{background:var(--black-raised);padding:14px 20px;border-bottom:1px solid var(--black-border);display:flex;align-items:center;gap:8px;}
+.folder-dots{display:flex;gap:6px;}
+.folder-dot{width:10px;height:10px;border-radius:50%;}
+.folder-dot:nth-child(1){background:#FF5F57;} .folder-dot:nth-child(2){background:#FEBC2E;} .folder-dot:nth-child(3){background:#28C840;}
+.folder-title{font-family:var(--font-mono);font-size:11px;color:var(--white-muted);margin-left:6px;}
+pre{font-family:var(--font-mono);font-size:12.5px;line-height:1.8;padding:28px 32px;overflow-x:auto;color:var(--white-dim);}
+pre .dir{color:var(--orange);font-weight:500;}
+pre .file{color:#B0A89E;}
+pre .comment{color:var(--white-muted);font-size:11px;}
+
+/* tech */
+.tech-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;}
+.tech-card{background:var(--black-card);border:1px solid var(--black-border);border-radius:12px;padding:20px 22px;transition:all .25s;position:relative;overflow:hidden;}
+.tech-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--orange-deep),var(--orange-hot));transform:scaleX(0);transform-origin:left;transition:transform .3s;}
+.tech-card:hover{border-color:var(--orange-line);transform:translateY(-3px);}
+.tech-card:hover::after{transform:scaleX(1);}
+.tech-card-top{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.tech-name{font-family:var(--font-head);font-weight:700;font-size:14px;}
+.tech-version{font-family:var(--font-mono);font-size:10px;color:var(--orange);margin-left:auto;background:var(--orange-glow);padding:2px 8px;border-radius:4px;}
+.tech-desc{font-size:12.5px;color:var(--white-muted);line-height:1.55;}
+
+/* env */
+.env-block{background:var(--black-card);border:1px solid var(--black-border);border-radius:16px;overflow:hidden;}
+.env-header{background:var(--black-raised);padding:14px 20px;border-bottom:1px solid var(--black-border);display:flex;align-items:center;justify-content:space-between;}
+.env-filename{font-family:var(--font-mono);font-size:12px;color:var(--white-dim);background:var(--black-border);padding:3px 10px;border-radius:4px;}
+.env-copy-btn{font-family:var(--font-mono);font-size:10px;color:var(--white-muted);background:var(--black-border);border:none;padding:5px 12px;border-radius:4px;cursor:pointer;text-transform:uppercase;letter-spacing:.08em;transition:all .2s;}
+.env-copy-btn:hover{color:var(--orange);}
+.env-content{padding:24px 32px;}
+.env-group{margin-bottom:28px;}
+.env-group:last-child{margin-bottom:0;}
+.env-group-label{font-family:var(--font-mono);font-size:10px;color:var(--white-muted);text-transform:uppercase;letter-spacing:.12em;margin-bottom:10px;padding-bottom:8px;border-bottom:1px dashed var(--black-border);}
+.env-line{display:flex;gap:12px;align-items:baseline;margin-bottom:6px;flex-wrap:wrap;}
+.env-key{font-family:var(--font-mono);font-size:13px;color:var(--orange-hot);min-width:260px;}
+.env-val{font-family:var(--font-mono);font-size:13px;color:var(--white-dim);}
+.env-comment{font-family:var(--font-mono);font-size:11px;color:var(--white-muted);}
+
+/* steps */
+.steps{display:flex;flex-direction:column;}
+.step{display:flex;position:relative;}
+.step-left{display:flex;flex-direction:column;align-items:center;padding-right:24px;width:52px;flex-shrink:0;}
+.step-num{width:36px;height:36px;border-radius:50%;background:var(--orange-glow);border:2px solid var(--orange);display:grid;place-items:center;font-family:var(--font-head);font-weight:800;font-size:14px;color:var(--orange);flex-shrink:0;z-index:1;}
+.step-line{flex:1;width:2px;background:var(--black-border);margin-top:4px;}
+.step:last-child .step-line{display:none;}
+.step-body{padding-bottom:36px;flex:1;}
+.step-title{font-family:var(--font-head);font-weight:700;font-size:16px;margin-bottom:8px;line-height:36px;}
+.code-block{background:var(--black-card);border:1px solid var(--black-border);border-radius:10px;overflow:hidden;font-family:var(--font-mono);font-size:12.5px;position:relative;}
+.code-block-header{background:var(--black-raised);padding:10px 16px;border-bottom:1px solid var(--black-border);font-size:10px;color:var(--white-muted);text-transform:uppercase;letter-spacing:.1em;display:flex;align-items:center;justify-content:space-between;}
+.lang-badge{background:var(--orange-glow);color:var(--orange);border:1px solid var(--orange-line);padding:1px 8px;border-radius:3px;font-size:9px;letter-spacing:.1em;}
+.code-block pre{padding:16px 20px;background:none;color:#C0B9B0;}
+.code-block pre .cmd{color:var(--white);}
+.copy-mini{background:none;border:none;color:var(--white-muted);font-family:var(--font-mono);font-size:9px;cursor:pointer;text-transform:uppercase;letter-spacing:.08em;}
+.copy-mini:hover{color:var(--orange);}
+
+/* api table */
+.api-group{margin-bottom:36px;}
+.api-group-label{font-family:var(--font-head);font-weight:700;font-size:16px;color:var(--orange);margin-bottom:14px;display:flex;align-items:center;gap:10px;}
+.api-group-label::after{content:'';flex:1;height:1px;background:var(--black-border);}
+table{width:100%;border-collapse:collapse;border:1px solid var(--black-border);border-radius:10px;overflow:hidden;}
+thead{background:var(--black-raised);}
+thead th{padding:12px 18px;text-align:left;font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--white-muted);border-bottom:1px solid var(--black-border);}
+tbody tr{border-bottom:1px solid var(--black-border);transition:background .15s;}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:hover{background:var(--black-raised);}
+tbody td{padding:12px 18px;font-size:13.5px;}
+.method{display:inline-block;font-family:var(--font-mono);font-size:10px;font-weight:600;padding:3px 8px;border-radius:4px;letter-spacing:.06em;}
+.method.get{background:rgba(74,158,255,.15);color:var(--blue);border:1px solid rgba(74,158,255,.3);}
+.method.post{background:rgba(80,200,120,.15);color:var(--green);border:1px solid rgba(80,200,120,.3);}
+.method.patch{background:rgba(255,170,50,.15);color:#FFAA32;border:1px solid rgba(255,170,50,.3);}
+.method.del{background:rgba(255,90,90,.15);color:#FF5A5A;border:1px solid rgba(255,90,90,.3);}
+.endpoint{font-family:var(--font-mono);font-size:12px;color:var(--white-dim);}
+
+/* schema */
+.schema-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;}
+.schema-card{background:var(--black-card);border:1px solid var(--black-border);border-radius:12px;overflow:hidden;transition:border-color .2s;}
+.schema-card:hover{border-color:var(--orange-line);}
+.schema-card-header{background:var(--black-raised);padding:14px 18px;border-bottom:1px solid var(--black-border);display:flex;align-items:center;justify-content:space-between;}
+.schema-name{font-family:var(--font-mono);font-size:13px;color:var(--orange);font-weight:500;}
+.schema-badge{font-family:var(--font-mono);font-size:9px;background:var(--black-border);color:var(--white-muted);padding:2px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:.08em;}
+.schema-fields{padding:16px 18px;}
+.schema-field{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.03);flex-wrap:wrap;}
+.schema-field:last-child{border-bottom:none;}
+.field-key{font-family:var(--font-mono);font-size:12px;color:var(--white-dim);min-width:130px;}
+.field-type{font-family:var(--font-mono);font-size:11px;color:#A0C4FF;}
+.field-note{font-size:11px;color:var(--white-muted);margin-left:auto;font-style:italic;}
+
+/* security */
+.security-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;}
+.security-card{background:var(--black-card);border:1px solid var(--black-border);border-radius:12px;padding:24px;transition:all .2s;}
+.security-card:hover{border-color:var(--orange-line);}
+.security-card-icon{font-size:26px;margin-bottom:14px;}
+.security-card h4{font-family:var(--font-head);font-weight:700;font-size:15px;margin-bottom:10px;}
+.security-card p{font-size:13px;color:var(--white-muted);line-height:1.6;}
+
+/* future */
+.future-list{display:flex;flex-direction:column;gap:10px;}
+.future-item{background:var(--black-card);border:1px solid var(--black-border);border-radius:10px;padding:16px 20px;display:flex;align-items:center;gap:16px;transition:all .2s;}
+.future-item:hover{border-color:var(--orange-line);background:var(--black-hover);transform:translateX(6px);}
+.future-item-icon{width:36px;height:36px;border-radius:8px;background:var(--orange-glow);border:1px solid var(--orange-line);display:grid;place-items:center;font-size:16px;flex-shrink:0;}
+.future-item-text h5{font-family:var(--font-head);font-weight:700;font-size:14px;margin-bottom:3px;}
+.future-item-text p{font-size:12.5px;color:var(--white-muted);}
+
+/* license */
+.license-box{background:var(--black-card);border:1px solid var(--black-border);border-radius:16px;padding:40px;position:relative;overflow:hidden;text-align:center;}
+.license-box::before{content:'MIT';position:absolute;top:-20px;right:20px;font-family:var(--font-head);font-weight:800;font-size:120px;color:rgba(255,107,26,.04);pointer-events:none;line-height:1;}
+.license-box h3{font-family:var(--font-head);font-weight:800;font-size:24px;margin-bottom:12px;letter-spacing:-.5px;}
+.license-box p{color:var(--white-dim);font-size:14px;max-width:520px;margin:0 auto 20px;}
+
+footer{border-top:1px solid var(--black-border);padding:32px 40px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;}
+.footer-brand{font-family:var(--font-head);font-weight:800;font-size:16px;display:flex;align-items:center;gap:10px;}
+.footer-brand .icon{width:28px;height:28px;background:var(--orange);border-radius:6px;display:grid;place-items:center;font-size:13px;color:#000;}
+.footer-links{display:flex;gap:20px;}
+.footer-links a{color:var(--white-muted);text-decoration:none;font-size:12.5px;transition:color .2s;}
+.footer-links a:hover{color:var(--orange);}
+.footer-copy{font-size:12px;color:var(--white-muted);}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.5;transform:scale(.8);}}
+.fade-in{opacity:0;transform:translateY(24px);transition:opacity .6s ease,transform .6s ease;}
+.fade-in.visible{opacity:1;transform:translateY(0);}
+
+@media(max-width:700px){
+  nav{padding:12px 20px;} .nav-links{display:none;} .burger{display:block;}
+  section{padding:60px 20px;} .hero{padding:60px 20px 40px;} .hero-stats{gap:24px;}
+  .env-key{min-width:200px;font-size:11px;} footer{flex-direction:column;align-items:flex-start;}
+  .divider{margin:0 20px;} .token-body{padding:28px 16px;}
+}
+</style>
+</head>
+<body>
+
+<div id="progress"></div>
+
+<nav>
+  <div class="nav-logo"><div class="icon">🛒</div>StudyMart</div>
+  <div class="nav-links" id="navLinks">
+    <a href="#overview">Overview</a>
+    <a href="#features">Features</a>
+    <a href="#architecture">Architecture</a>
+    <a href="#auth">Auth</a>
+    <a href="#setup">Setup</a>
+    <a href="#api">API</a>
+    <a href="#security">Security</a>
+  </div>
+  <button class="burger" id="burger">☰</button>
+</nav>
+
+<section class="hero" id="top">
+  <div class="hero-grid"></div>
+  <div class="hero-glow"></div>
+  <div class="hero-content">
+    <div class="hero-badge"><span class="dot"></span> Full-Stack · Open Source · Student-Built</div>
+    <h1><span class="gradient">Study</span><br/><span class="outline">Mart</span></h1>
+    <p class="hero-sub">
+      A dedicated marketplace where students buy and sell books, notes, calculators, and lab
+      gear — with a FastAPI + MongoDB backend, JWT session security, and a Next.js frontend.
+    </p>
+    <div class="hero-ctas">
+      <a href="#setup" class="btn-primary">Get Started →</a>
+      <a href="#api" class="btn-outline">View API Reference</a>
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat"><div class="val">5</div><div class="lbl">Collections</div></div>
+      <div class="hero-stat"><div class="val">JWT</div><div class="lbl">Rotating Tokens</div></div>
+      <div class="hero-stat"><div class="val">TTL</div><div class="lbl">Auto-Expiring Sessions</div></div>
+      <div class="hero-stat"><div class="val">100%</div><div class="lbl">Responsive UI</div></div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<section id="overview" class="fade-in">
+  <div class="section-label">01 — Overview</div>
+  <h2>One marketplace.<br/>Built for students, by a student.</h2>
+  <p class="section-desc">
+    StudyMart replaces scattered WhatsApp groups and generic marketplaces with one place to
+    trade academic essentials. Every session runs through short-lived access tokens paired with
+    rotating, TTL-indexed refresh tokens — so accounts stay secure without students noticing the machinery.
+  </p>
+  <div class="badges">
+    <span class="badge badge-orange">⚡ Next.js</span>
+    <span class="badge badge-blue">🐍 FastAPI</span>
+    <span class="badge badge-green">🍃 MongoDB</span>
+    <span class="badge badge-orange">🔑 JWT (Access + Refresh)</span>
+    <span class="badge badge-blue">☁️ Cloudinary</span>
+    <span class="badge badge-green">🔴 Redux Toolkit</span>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<section id="features" class="fade-in">
+  <div class="section-label">02 — Features</div>
+  <h2>What's actually built<br/>right now.</h2>
+  <p class="section-desc">No roadmap items disguised as features — this is what ships in the current build.</p>
+  <div class="feature-grid">
+    <div class="feature-card">
+      <div class="feature-icon">🏪</div>
+      <h3>Product Marketplace</h3>
+      <p>Post and browse listings for textbooks, electronics, and lab equipment, backed by the <code>products</code> collection.</p>
+      <span class="feature-tag">Core</span>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔍</div>
+      <h3>Lost &amp; Found</h3>
+      <p>A dedicated board for lost and found campus items, with threaded comments for coordination.</p>
+      <span class="feature-tag">Community</span>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">👤</div>
+      <h3>Profile Pages</h3>
+      <p>Unified public and own-profile views built from shared components with conditional action buttons.</p>
+      <span class="feature-tag">Frontend</span>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔑</div>
+      <h3>Rotating JWT Auth</h3>
+      <p>Access and refresh tokens with rotation on every refresh call, backed by a TTL index for automatic cleanup.</p>
+      <span class="feature-tag">Security</span>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🧱</div>
+      <h3>Mosaic Product Grid</h3>
+      <p>A varied-tile grid layout for the profile's product listings instead of a flat, uniform grid.</p>
+      <span class="feature-tag">UI</span>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🎨</div>
+      <h3>Dark, Amber-Accented UI</h3>
+      <p>A consistent dark aesthetic across the profile, settings, and marketplace surfaces.</p>
+      <span class="feature-tag">Design</span>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<section id="architecture" class="fade-in">
+  <div class="section-label">03 — Architecture</div>
+  <h2>Three layers.<br/>One clean request path.</h2>
+  <p class="section-desc">The frontend never talks to MongoDB directly — every read and write goes through the FastAPI layer.</p>
+  <div class="arch-wrap">
+    <div class="arch-header"><div class="folder-dots"><div class="folder-dot"></div><div class="folder-dot"></div><div class="folder-dot"></div></div><span class="arch-title">studymart / architecture</span></div>
+    <div class="arch-body">
+      <div class="arch-layer">
+        <div class="arch-layer-label"><span>Layer 1</span> — Client</div>
+        <div class="arch-boxes"><div class="arch-box">🌐 Next.js Frontend<span>App Router</span></div></div>
+      </div>
+      <div class="arch-connector"><div class="arch-connector-line"></div><div class="arch-connector-label">HTTPS (REST)</div><div class="arch-connector-line"></div></div>
+      <div class="arch-layer">
+        <div class="arch-layer-label"><span>Layer 2</span> — API (FastAPI)</div>
+        <div class="arch-boxes">
+          <div class="arch-box">🔀 REST Endpoints<span>Pydantic-validated</span></div>
+          <div class="arch-box">🔒 JWT Middleware<span>Access + refresh</span></div>
+        </div>
+      </div>
+      <div class="arch-connector"><div class="arch-connector-line"></div><div class="arch-connector-label">MongoDB driver</div><div class="arch-connector-line"></div></div>
+      <div class="arch-layer">
+        <div class="arch-layer-label"><span>Layer 3</span> — Data</div>
+        <div class="arch-boxes">
+          <div class="arch-box">🍃 MongoDB<span>5 collections</span></div>
+          <div class="arch-box">☁️ Cloudinary<span>Image storage</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<section id="auth" class="fade-in">
+  <div class="section-label">04 — Token Lifecycle</div>
+  <h2>Access tokens expire fast.<br/>Refresh tokens rotate quietly.</h2>
+  <p class="section-desc">Every refresh call issues a brand-new refresh token and invalidates the old one — the TTL index clears expired entries from MongoDB automatically.</p>
+  <div class="token-wrap">
+    <div class="token-header"><div class="token-dot"></div><div class="token-dot"></div><div class="token-dot"></div><span class="token-title">token-rotation.live</span></div>
+    <div class="token-body">
+      <div class="token-card">
+        <div class="tlabel">Access Token</div>
+        <div class="tval">Live</div>
+        <div class="token-bar"><div class="token-bar-fill"></div></div>
+      </div>
+      <div class="token-arrow">→<span>on expiry</span></div>
+      <div class="token-card token-refresh">
+        <div class="tlabel">Refresh Token</div>
+        <div class="tval">Rotates</div>
+        <div class="token-bar"><div class="token-bar-fill" style="animation-duration:6s;animation-delay:0s"></div></div>
+      </div>
+      <div class="token-arrow">→<span>issues new</span></div>
+      <div class="token-card">
+        <div class="tlabel">New Pair</div>
+        <div class="tval">Fresh</div>
+        <div class="token-bar"><div class="token-bar-fill" style="animation-delay:1s"></div></div>
+      </div>
+    </div>
+    <div class="token-note"># old refresh tokens are never reused — MongoDB's TTL index removes them once expired, no manual cleanup job required.</div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<section id="structure" class="fade-in">
+  <div class="section-label">05 — Folder Structure</div>
+  <h2>Kept simple.<br/>Not over-engineered.</h2>
+  <div class="folder-wrap">
+    <div class="folder-header"><div class="folder-dots"><div class="folder-dot"></div><div class="folder-dot"></div><div class="folder-dot"></div></div><span class="folder-title">studymart/</span></div>
+<pre>
+<span class="dir">studymart/</span>
+│
+├── <span class="dir">frontend/</span>                      <span class="comment"># Next.js application</span>
+│   ├── <span class="dir">app/</span>
+│   │   ├── <span class="dir">profile/</span>                <span class="comment"># ProfileHero, ProfileInfo, ProfileProducts</span>
+│   │   ├── <span class="dir">marketplace/</span>
+│   │   └── <span class="dir">lost-and-found/</span>
+│   ├── <span class="dir">components/</span>
+│   │   ├── <span class="file">ProfileHero.jsx</span>
+│   │   ├── <span class="file">ProfileInfo.jsx</span>
+│   │   ├── <span class="file">ProfileProducts.jsx</span>
+│   │   └── <span class="file">SettingsSection.jsx</span>
+│   └── <span class="dir">store/</span>                      <span class="comment"># Redux Toolkit slices</span>
+│
+├── <span class="dir">backend/</span>                        <span class="comment"># FastAPI application</span>
+│   └── <span class="dir">app/</span>
+│       ├── <span class="file">main.py</span>
+│       ├── <span class="dir">routers/</span>
+│       │   ├── <span class="file">auth.py</span>            <span class="comment"># access + refresh token rotation</span>
+│       │   ├── <span class="file">products.py</span>
+│       │   ├── <span class="file">profile.py</span>
+│       │   └── <span class="file">lost_found.py</span>
+│       └── <span class="dir">models/</span>                 <span class="comment"># Pydantic schemas</span>
+│
+├── <span class="file">docs/</span>                          <span class="comment"># .docx developer documentation</span>
+└── <span class="file">.env.example</span>
+</pre>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<section id="tech" class="fade-in">
+  <div class="section-label">06 — Tech Stack</div>
+  <h2>Every layer,<br/>chosen on purpose.</h2>
+  <div class="tech-grid">
+    <div class="tech-card"><div class="tech-card-top"><span class="tech-name">Next.js</span><span class="tech-version">App Router</span></div><p class="tech-desc">Frontend framework for the marketplace, profile, and settings pages.</p></div>
+    <div class="tech-card"><div class="tech-card-top"><span class="tech-name">FastAPI</span><span class="tech-version">Python</span></div><p class="tech-desc">Async backend serving REST endpoints with Pydantic validation.</p></div>
+    <div class="tech-card"><div class="tech-card-top"><span class="tech-name">MongoDB</span><span class="tech-version">5 collections</span></div><p class="tech-desc">Document store for signup, profiles, products, and lost-and-found data.</p></div>
+    <div class="tech-card"><div class="tech-card-top"><span class="tech-name">JWT</span><span class="tech-version">Access + Refresh</span></div><p class="tech-desc">Stateless auth with refresh-token rotation and TTL-based expiry.</p></div>
+    <div class="tech-card"><div class="tech-card-top"><span class="tech-name">Redux Toolkit</span><span class="tech-version">State</span></div><p class="tech-desc">Predictable client-side state across the app.</p></div>
+    <div class="tech-card"><div class="tech-card-top"><span class="tech-name">Cloudinary</span><span class="tech-version">Media</span></div><p class="tech-desc">Image hosting for product and profile photos.</p></div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<section id="env" class="fade-in">
+  <div class="section-label">07 — Environment Variables</div>
+  <h2>Copy, fill in,<br/>run.</h2>
+  <p class="section-desc">Copy <code>.env.example</code> to <code>.env</code> and fill in your own values. Never commit <code>.env</code>.</p>
+  <div class="env-block">
+    <div class="env-header">
+      <span class="env-filename">.env.example</span>
+      <button class="env-copy-btn" id="copyEnvBtn">Copy</button>
+    </div>
+    <div class="env-content">
+      <div class="env-group">
+        <div class="env-group-label"># MongoDB</div>
+        <div class="env-line"><span class="env-key">MONGO_URI</span><span class="env-val">=mongodb://localhost:27017/studymart</span></div>
+      </div>
+      <div class="env-group">
+        <div class="env-group-label"># JWT</div>
+        <div class="env-line"><span class="env-key">JWT_SECRET_KEY</span><span class="env-val">=your-secret-key-here</span></div>
+        <div class="env-line"><span class="env-key">ACCESS_TOKEN_EXPIRE_MINUTES</span><span class="env-val">=15</span></div>
+        <div class="env-line"><span class="env-key">REFRESH_TOKEN_EXPIRE_DAYS</span><span class="env-val">=7</span><span class="env-comment"># TTL-indexed in MongoDB</span></div>
+      </div>
+      <div class="env-group">
+        <div class="env-group-label"># Cloudinary</div>
+        <div class="env-line"><span class="env-key">CLOUDINARY_CLOUD_NAME</span><span class="env-val">=your_cloud_name</span></div>
+        <div class="env-line"><span class="env-key">CLOUDINARY_API_KEY</span><span class="env-val">=your_api_key</span></div>
+        <div class="env-line"><span class="env-key">CLOUDINARY_API_SECRET</span><span class="env-val">=your_api_secret</span></div>
+      </div>
+      <div class="env-group">
+        <div class="env-group-label"># Next.js</div>
+        <div class="env-line"><span class="env-key">NEXT_PUBLIC_API_BASE_URL</span><span class="env-val">=http://localhost:8000/api/v1</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<section id="setup" class="fade-in">
+  <div class="section-label">08 — Local Setup</div>
+  <h2>Running in<br/>under five minutes.</h2>
+  <div class="steps">
+    <div class="step">
+      <div class="step-left"><div class="step-num">1</div><div class="step-line"></div></div>
+      <div class="step-body">
+        <div class="step-title">Clone the repository</div>
+        <div class="code-block">
+          <div class="code-block-header"><span class="lang-badge">BASH</span><button class="copy-mini" data-copy="git clone https://github.com/your-org/studymart.git
+cd studymart">Copy</button></div>
+<pre><span class="cmd">git clone https://github.com/your-org/studymart.git</span>
+<span class="cmd">cd studymart</span></pre>
+        </div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-left"><div class="step-num">2</div><div class="step-line"></div></div>
+      <div class="step-body">
+        <div class="step-title">Backend (FastAPI)</div>
+        <div class="code-block">
+          <div class="code-block-header"><span class="lang-badge">BASH</span><button class="copy-mini" data-copy="cd backend
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+uvicorn app.main:app --reload --port 8000">Copy</button></div>
+<pre><span class="cmd">cd backend</span>
+<span class="cmd">python -m venv venv</span>
+<span class="cmd">source venv/bin/activate</span>        <span class="comment"># Windows: venv\Scripts\activate</span>
+<span class="cmd">pip install -r requirements.txt</span>
+<span class="cmd">uvicorn app.main:app --reload --port 8000</span>
+<span class="comment"># API docs → http://localhost:8000/docs</span></pre>
+        </div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-left"><div class="step-num">3</div></div>
+      <div class="step-body">
+        <div class="step-title">Frontend (Next.js)</div>
+        <div class="code-block">
+          <div class="code-block-header"><span class="lang-badge">BASH</span><button class="copy-mini" data-copy="cd frontend
+npm install
+cp ../.env.example .env.local
+npm run dev">Copy</button></div>
+<pre><span class="cmd">cd frontend</span>
+<span class="cmd">npm install</span>
+<span class="cmd">cp ../.env.example .env.local</span>
+<span class="cmd">npm run dev</span>
+<span class="comment"># App → http://localhost:3000</span></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<section id="api" class="fade-in">
+  <div class="section-label">09 — API Reference</div>
+  <h2>REST, versioned,<br/>self-documented.</h2>
+  <p class="section-desc">All endpoints are prefixed <code>/api/v1/</code>. Interactive docs are auto-generated at <code>/docs</code>.</p>
+  <div class="api-group">
+    <div class="api-group-label">🔐 Auth</div>
+    <table>
+      <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><span class="method post">POST</span></td><td class="endpoint">/auth/signup</td><td>Create an account</td></tr>
+        <tr><td><span class="method post">POST</span></td><td class="endpoint">/auth/login</td><td>Login, returns access + refresh tokens</td></tr>
+        <tr><td><span class="method post">POST</span></td><td class="endpoint">/auth/refresh</td><td>Rotate access + refresh tokens</td></tr>
+        <tr><td><span class="method post">POST</span></td><td class="endpoint">/auth/logout</td><td>Invalidate the current refresh token</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="api-group">
+    <div class="api-group-label">🏪 Products</div>
+    <table>
+      <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><span class="method get">GET</span></td><td class="endpoint">/products</td><td>Browse listings, with filters</td></tr>
+        <tr><td><span class="method post">POST</span></td><td class="endpoint">/products</td><td>Create a new listing</td></tr>
+        <tr><td><span class="method get">GET</span></td><td class="endpoint">/products/{id}</td><td>Fetch a single listing</td></tr>
+        <tr><td><span class="method patch">PATCH</span></td><td class="endpoint">/products/{id}</td><td>Update a listing (owner only)</td></tr>
+        <tr><td><span class="method del">DELETE</span></td><td class="endpoint">/products/{id}</td><td>Remove a listing (owner only)</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="api-group">
+    <div class="api-group-label">👤 Profile &nbsp;·&nbsp; 🔍 Lost &amp; Found</div>
+    <table>
+      <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><span class="method get">GET</span></td><td class="endpoint">/profile/{id}</td><td>Fetch a public or own profile</td></tr>
+        <tr><td><span class="method patch">PATCH</span></td><td class="endpoint">/profile/me</td><td>Update the current user's profile</td></tr>
+        <tr><td><span class="method get">GET</span></td><td class="endpoint">/lost-found</td><td>Browse lost and found posts</td></tr>
+        <tr><td><span class="method post">POST</span></td><td class="endpoint">/lost-found/{id}/comments</td><td>Add a comment to a post</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<section id="schema" class="fade-in">
+  <div class="section-label">10 — Database Schema</div>
+  <h2>Five collections.<br/>Nothing extra.</h2>
+  <div class="schema-grid">
+    <div class="schema-card">
+      <div class="schema-card-header"><span class="schema-name">signup</span><span class="schema-badge">Collection</span></div>
+      <div class="schema-fields">
+        <div class="schema-field"><span class="field-key">_id</span><span class="field-type">ObjectId</span></div>
+        <div class="schema-field"><span class="field-key">email</span><span class="field-type">string</span></div>
+        <div class="schema-field"><span class="field-key">password_hash</span><span class="field-type">string</span></div>
+        <div class="schema-field"><span class="field-key">refresh_token</span><span class="field-type">string</span><span class="field-note">TTL indexed</span></div>
+      </div>
+    </div>
+    <div class="schema-card">
+      <div class="schema-card-header"><span class="schema-name">user-profile</span><span class="schema-badge">Collection</span></div>
+      <div class="schema-fields">
+        <div class="schema-field"><span class="field-key">_id</span><span class="field-type">ObjectId</span></div>
+        <div class="schema-field"><span class="field-key">user_id</span><span class="field-type">ref: signup</span></div>
+        <div class="schema-field"><span class="field-key">display_name</span><span class="field-type">string</span></div>
+        <div class="schema-field"><span class="field-key">avatar_url</span><span class="field-type">string</span><span class="field-note">Cloudinary</span></div>
+      </div>
+    </div>
+    <div class="schema-card">
+      <div class="schema-card-header"><span class="schema-name">products</span><span class="schema-badge">Collection</span></div>
+      <div class="schema-fields">
+        <div class="schema-field"><span class="field-key">_id</span><span class="field-type">ObjectId</span></div>
+        <div class="schema-field"><span class="field-key">seller_id</span><span class="field-type">ref: signup</span></div>
+        <div class="schema-field"><span class="field-key">title</span><span class="field-type">string</span></div>
+        <div class="schema-field"><span class="field-key">price</span><span class="field-type">number</span></div>
+        <div class="schema-field"><span class="field-key">images</span><span class="field-type">string[]</span></div>
+      </div>
+    </div>
+    <div class="schema-card">
+      <div class="schema-card-header"><span class="schema-name">lost-and-found</span><span class="schema-badge">Collection</span></div>
+      <div class="schema-fields">
+        <div class="schema-field"><span class="field-key">_id</span><span class="field-type">ObjectId</span></div>
+        <div class="schema-field"><span class="field-key">type</span><span class="field-type">lost | found</span></div>
+        <div class="schema-field"><span class="field-key">location</span><span class="field-type">string</span></div>
+        <div class="schema-field"><span class="field-key">status</span><span class="field-type">open | resolved</span></div>
+      </div>
+    </div>
+    <div class="schema-card">
+      <div class="schema-card-header"><span class="schema-name">lost-and-found-comment</span><span class="schema-badge">Collection</span></div>
+      <div class="schema-fields">
+        <div class="schema-field"><span class="field-key">_id</span><span class="field-type">ObjectId</span></div>
+        <div class="schema-field"><span class="field-key">post_id</span><span class="field-type">ref: lost-and-found</span></div>
+        <div class="schema-field"><span class="field-key">author_id</span><span class="field-type">ref: signup</span></div>
+        <div class="schema-field"><span class="field-key">content</span><span class="field-type">string</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<section id="security" class="fade-in">
+  <div class="section-label">11 — Security</div>
+  <h2>Rotation over reuse.</h2>
+  <div class="security-grid">
+    <div class="security-card"><div class="security-card-icon">🔑</div><h4>Access + Refresh Split</h4><p>Short-lived access tokens (15 min) paired with longer-lived refresh tokens (7 days).</p></div>
+    <div class="security-card"><div class="security-card-icon">🔄</div><h4>Refresh Rotation</h4><p>Every refresh call issues a new token pair and invalidates the previous refresh token.</p></div>
+    <div class="security-card"><div class="security-card-icon">🍃</div><h4>TTL-Indexed Storage</h4><p>MongoDB automatically removes expired refresh tokens — no cleanup job required.</p></div>
+    <div class="security-card"><div class="security-card-icon">🛡️</div><h4>Pydantic Validation</h4><p>Every request body is validated before it touches the database.</p></div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<section id="license" class="fade-in">
+  <div class="section-label">12 — License</div>
+  <div class="license-box">
+    <h3>MIT License</h3>
+    <p>Permission is hereby granted, free of charge, to use, copy, modify, merge, and distribute this software, subject to the above copyright notice appearing in all copies.</p>
+    <span class="badge badge-orange">Open Source · MIT</span>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-brand"><div class="icon">🛒</div>StudyMart</div>
+  <div class="footer-links"><a href="#overview">Overview</a><a href="#features">Features</a><a href="#setup">Setup</a><a href="#api">API</a></div>
+  <div class="footer-copy">Built for students · MIT License</div>
+</footer>
+
+<script>
+const observer = new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('visible'); } });
+},{threshold:.08});
+document.querySelectorAll('.fade-in').forEach(el=>observer.observe(el));
+
+window.addEventListener('scroll', ()=>{
+  const h = document.documentElement;
+  const p = (h.scrollTop||document.body.scrollTop) / ((h.scrollHeight||document.body.scrollHeight) - h.clientHeight) * 100;
+  document.getElementById('progress').style.width = p+'%';
+  const sections = document.querySelectorAll('section[id]');
+  let current = '';
+  sections.forEach(s=>{ if(window.scrollY >= s.offsetTop - 120) current = s.id; });
+  document.querySelectorAll('.nav-links a').forEach(a=>{
+    a.classList.toggle('active', a.getAttribute('href') === '#'+current);
+  });
+});
+
+document.getElementById('burger').addEventListener('click', ()=>{
+  const nl = document.getElementById('navLinks');
+  nl.style.display = nl.style.display === 'flex' ? 'none' : 'flex';
+  nl.style.flexDirection = 'column';
+  nl.style.position='absolute'; nl.style.top='56px'; nl.style.right='16px';
+  nl.style.background='rgba(14,14,14,.98)'; nl.style.border='1px solid var(--black-border)';
+  nl.style.borderRadius='10px'; nl.style.padding='10px';
+});
+
+function copyText(text, btn){
+  navigator.clipboard.writeText(text);
+  const orig = btn.textContent;
+  btn.textContent = 'Copied!';
+  setTimeout(()=>{ btn.textContent = orig; }, 1600);
+}
+document.getElementById('copyEnvBtn').addEventListener('click', function(){
+  const env = `MONGO_URI=mongodb://localhost:27017/studymart\n\nJWT_SECRET_KEY=your-secret-key-here\nACCESS_TOKEN_EXPIRE_MINUTES=15\nREFRESH_TOKEN_EXPIRE_DAYS=7\n\nCLOUDINARY_CLOUD_NAME=your_cloud_name\nCLOUDINARY_API_KEY=your_api_key\nCLOUDINARY_API_SECRET=your_api_secret\n\nNEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api/v1`;
+  copyText(env, this);
+});
+document.querySelectorAll('.copy-mini').forEach(btn=>{
+  btn.addEventListener('click', function(){ copyText(this.dataset.copy, this); });
+});
+
+document.addEventListener('mousemove', (e)=>{
+  const glow = document.querySelector('.hero-glow');
+  if(!glow) return;
+  const x = (e.clientX/window.innerWidth - 0.5) * 30;
+  const y = (e.clientY/window.innerHeight - 0.5) * 20;
+  glow.style.transform = `translateX(calc(-50% + ${x}px)) translateY(${y}px)`;
+});
+</script>
+</body>
+</html>

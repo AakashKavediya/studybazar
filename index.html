@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StudyMart — The Ultimate Student Marketplace</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<style>
+:root{
+  --orange:#FF6B1A; --orange-hot:#FF8C42; --orange-deep:#CC4E00;
+  --orange-glow:rgba(255,107,26,.16); --orange-line:rgba(255,107,26,.32);
+  --black:#0E0E0E; --black-card:#141414; --black-raised:#1A1A1A;
+  --black-border:#252525; --black-hover:#1F1F1F;
+  --white:#F5F0EB; --white-dim:#B0A89E; --white-muted:#6B6059;
+  --font-head:'Syne',sans-serif; --font-body:'Outfit',sans-serif; --font-mono:'DM Mono',monospace;
+  --green:#50C878;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--black);color:var(--white);font-family:var(--font-body);overflow-x:hidden;cursor:none;}
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  opacity:.026;pointer-events:none;z-index:9999;
+}
+a{text-decoration:none;color:inherit;} ul{list-style:none;} img{max-width:100%;display:block;}
+
+/* cursor */
+#cursor-dot,#cursor-ring{position:fixed;top:0;left:0;pointer-events:none;z-index:9998;border-radius:50%;transform:translate(-50%,-50%);}
+#cursor-dot{width:6px;height:6px;background:var(--orange);}
+#cursor-ring{width:30px;height:30px;border:1px solid var(--orange-line);transition:transform .12s ease-out;}
+body.cursor-hover #cursor-ring{transform:translate(-50%,-50%) scale(1.7);border-color:var(--orange);background:var(--orange-glow);}
+@media(hover:none){#cursor-dot,#cursor-ring{display:none;} body{cursor:auto;}}
+
+#scroll-progress{position:fixed;top:0;left:0;height:2px;background:linear-gradient(90deg,var(--orange-deep),var(--orange-hot));z-index:9997;width:0%;}
+#mouse-glow{position:fixed;width:600px;height:600px;border-radius:50%;pointer-events:none;z-index:1;background:radial-gradient(circle,var(--orange-glow),transparent 70%);transform:translate(-50%,-50%);}
+
+/* navbar */
+nav{position:fixed;top:0;left:0;width:100%;z-index:1000;padding:20px 6%;display:flex;align-items:center;justify-content:space-between;transition:all .4s;}
+nav.scrolled{padding:12px 6%;background:rgba(14,14,14,.85);backdrop-filter:blur(20px);border-bottom:1px solid var(--black-border);}
+.logo{font-family:var(--font-head);font-weight:800;font-size:1.3rem;display:flex;align-items:center;gap:10px;letter-spacing:-.5px;}
+.logo-mark{width:32px;height:32px;border-radius:8px;background:var(--orange);display:flex;align-items:center;justify-content:center;color:#000;font-size:.95rem;}
+.nav-links{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+.nav-links a{font-family:var(--font-mono);font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--white-muted);padding:6px 12px;border-radius:5px;border:1px solid transparent;transition:all .2s;}
+.nav-links a:hover{color:var(--orange);border-color:var(--orange-line);background:var(--orange-glow);}
+.nav-cta{padding:9px 20px;border-radius:7px;background:var(--orange);color:#000;font-weight:700;font-family:var(--font-head);font-size:.82rem;}
+.nav-cta:hover{background:var(--orange-hot);}
+.burger{display:none;font-size:1.3rem;cursor:pointer;color:var(--white);}
+
+.btn{position:relative;overflow:hidden;display:inline-flex;align-items:center;gap:9px;padding:14px 30px;border-radius:8px;font-family:var(--font-head);font-weight:700;font-size:.85rem;cursor:pointer;border:none;transition:all .25s;}
+.btn-primary{background:var(--orange);color:#000;}
+.btn-primary:hover{background:var(--orange-hot);transform:translateY(-2px);box-shadow:0 10px 30px rgba(255,107,26,.4);}
+.btn-outline{background:transparent;border:1px solid var(--black-border);color:var(--white);}
+.btn-outline:hover{border-color:var(--orange-line);color:var(--orange);background:var(--orange-glow);transform:translateY(-2px);}
+.btn::before{content:'';position:absolute;top:0;left:-75%;width:50%;height:100%;background:linear-gradient(120deg,transparent,rgba(255,255,255,.3),transparent);transform:skewX(-25deg);}
+.btn:hover::before{animation:shine 1s forwards;}
+@keyframes shine{100%{left:125%;}}
+
+section{position:relative;padding:130px 6%;z-index:2;max-width:1200px;margin:0 auto;}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--orange);padding:6px 14px;border:1px solid var(--orange-line);border-radius:100px;background:var(--orange-glow);margin-bottom:20px;}
+.section-head{max-width:640px;margin-bottom:64px;}
+.section-head h2{font-family:var(--font-head);font-weight:800;font-size:clamp(1.9rem,4vw,2.8rem);letter-spacing:-1.5px;line-height:1.12;margin-bottom:14px;}
+.section-head p{color:var(--white-dim);font-size:1rem;line-height:1.7;font-weight:300;}
+.gradient-text{background:linear-gradient(135deg,var(--orange-hot),var(--orange),var(--orange-deep));-webkit-background-clip:text;background-clip:text;color:transparent;}
+
+/* hero */
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding-top:110px;position:relative;overflow:hidden;}
+.hero-grid-bg{position:absolute;inset:0;background-image:linear-gradient(var(--black-border) 1px,transparent 1px),linear-gradient(90deg,var(--black-border) 1px,transparent 1px);background-size:60px 60px;mask-image:radial-gradient(ellipse 75% 55% at 50% 40%,black 20%,transparent 100%);opacity:.5;}
+.blob{position:absolute;border-radius:50%;filter:blur(90px);opacity:.28;animation:blobMove 18s ease-in-out infinite;}
+.blob1{width:480px;height:480px;background:var(--orange);top:-120px;left:-100px;}
+.blob2{width:420px;height:420px;background:var(--orange-deep);bottom:-140px;right:-80px;animation-delay:-6s;}
+.blob3{width:340px;height:340px;background:var(--orange-hot);top:35%;left:58%;animation-delay:-11s;}
+@keyframes blobMove{0%,100%{transform:translate(0,0) scale(1);}33%{transform:translate(60px,-40px) scale(1.15);}66%{transform:translate(-40px,50px) scale(.9);}}
+#particles{position:absolute;inset:0;z-index:0;}
+.particle{position:absolute;background:var(--orange);border-radius:50%;opacity:.5;}
+
+.hero-content{position:relative;z-index:2;max-width:880px;}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:7px 18px;border-radius:100px;background:var(--black-raised);border:1px solid var(--orange-line);font-family:var(--font-mono);font-size:.78rem;color:var(--orange);text-transform:uppercase;letter-spacing:.1em;margin-bottom:28px;}
+.hero-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--green);}
+.hero h1{font-family:var(--font-head);font-weight:800;font-size:clamp(3rem,8vw,6rem);letter-spacing:-3px;line-height:.95;margin-bottom:22px;}
+.hero-sub{font-size:clamp(1.05rem,2vw,1.35rem);font-weight:600;font-family:var(--font-head);color:var(--white);margin-bottom:16px;}
+.hero-desc{color:var(--white-dim);font-size:1rem;font-weight:300;line-height:1.75;max-width:600px;margin:0 auto 42px;}
+.hero-actions{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-bottom:56px;}
+.hero-stats{display:flex;gap:44px;flex-wrap:wrap;justify-content:center;padding-top:36px;border-top:1px solid var(--black-border);}
+.hero-stat{text-align:center;}
+.hero-stat b{display:block;font-family:var(--font-head);font-size:1.7rem;font-weight:800;color:var(--orange);}
+.hero-stat span{font-family:var(--font-mono);font-size:.72rem;color:var(--white-muted);text-transform:uppercase;letter-spacing:.08em;}
+.scroll-cue{position:absolute;bottom:32px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;font-family:var(--font-mono);font-size:.7rem;color:var(--white-muted);z-index:2;animation:bounce 2.2s infinite;text-transform:uppercase;letter-spacing:.1em;}
+@keyframes bounce{0%,100%{transform:translate(-50%,0);}50%{transform:translate(-50%,10px);}}
+.typing::after{content:'|';animation:blink 1s infinite;color:var(--orange);}
+@keyframes blink{50%{opacity:0;}}
+
+/* features */
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;background:var(--black-border);border:1px solid var(--black-border);border-radius:16px;overflow:hidden;}
+.feature-card{background:var(--black-card);padding:30px 26px;transition:background .2s;position:relative;}
+.feature-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--orange),transparent);opacity:0;transition:opacity .3s;}
+.feature-card:hover{background:var(--black-hover);}
+.feature-card:hover::before{opacity:1;}
+.feature-icon{width:46px;height:46px;border-radius:10px;background:var(--orange-glow);border:1px solid var(--orange-line);display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:var(--orange);margin-bottom:18px;}
+.feature-card h3{font-family:var(--font-head);font-size:1rem;font-weight:700;margin-bottom:8px;letter-spacing:-.2px;}
+.feature-card p{font-size:.85rem;color:var(--white-muted);line-height:1.6;}
+
+/* timeline */
+.timeline{position:relative;max-width:900px;margin:0 auto;}
+.timeline::before{content:'';position:absolute;left:24px;top:0;bottom:0;width:2px;background:linear-gradient(180deg,var(--orange),transparent);}
+.timeline-item{position:relative;padding-left:70px;margin-bottom:44px;}
+.timeline-item:last-child{margin-bottom:0;}
+.timeline-dot{position:absolute;left:14px;top:2px;width:22px;height:22px;border-radius:50%;background:var(--black);border:2px solid var(--orange);display:flex;align-items:center;justify-content:center;}
+.timeline-dot i{font-size:.6rem;color:var(--orange);}
+.timeline-item h3{font-family:var(--font-head);font-size:1.1rem;font-weight:700;margin-bottom:6px;}
+.timeline-item p{color:var(--white-muted);font-size:.9rem;line-height:1.6;max-width:560px;}
+
+/* tech */
+.grid-6{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;}
+.tech-card{background:var(--black-card);border:1px solid var(--black-border);border-radius:12px;padding:22px 12px;text-align:center;transition:all .3s;position:relative;overflow:hidden;}
+.tech-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--orange-deep),var(--orange-hot));transform:scaleX(0);transition:transform .3s;}
+.tech-card i{font-size:1.7rem;margin-bottom:10px;display:block;color:var(--white-dim);}
+.tech-card:hover{transform:translateY(-5px);border-color:var(--orange-line);}
+.tech-card:hover i{color:var(--orange);}
+.tech-card:hover::after{transform:scaleX(1);}
+.tech-card p{font-family:var(--font-mono);font-size:.7rem;color:var(--white-muted);}
+
+/* stats */
+.stats-wrap{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+.stat-card{text-align:center;padding:44px 18px;border-radius:14px;background:var(--black-card);border:1px solid var(--black-border);}
+.stat-num{font-family:var(--font-head);font-size:2.8rem;font-weight:800;color:var(--orange);margin-bottom:6px;}
+.stat-card p{color:var(--white-muted);font-family:var(--font-mono);font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;}
+
+/* architecture */
+.arch-flow{display:flex;flex-direction:column;align-items:center;max-width:480px;margin:0 auto;}
+.arch-node{width:100%;padding:20px 26px;border-radius:12px;background:var(--black-card);border:1px solid var(--black-border);text-align:center;display:flex;align-items:center;justify-content:center;gap:12px;font-family:var(--font-head);font-weight:700;font-size:.95rem;transition:all .3s;}
+.arch-node i{color:var(--orange);font-size:1.1rem;}
+.arch-node:hover{border-color:var(--orange-line);}
+.arch-line{width:2px;height:42px;background:linear-gradient(180deg,var(--orange-deep),var(--orange-hot));position:relative;overflow:hidden;}
+.arch-line::after{content:'';position:absolute;left:0;top:-100%;width:100%;height:100%;background:linear-gradient(180deg,transparent,#fff,transparent);animation:flow 2s linear infinite;}
+@keyframes flow{to{top:200%;}}
+
+/* showcase — signature: listing card stack */
+.listing-stage{display:flex;justify-content:center;align-items:center;min-height:420px;position:relative;perspective:1200px;}
+.listing-card{
+  width:260px;background:var(--black-card);border:1px solid var(--black-border);border-radius:16px;overflow:hidden;
+  position:absolute;transition:transform .5s ease, box-shadow .5s ease;box-shadow:0 20px 50px rgba(0,0,0,.5);
+}
+.listing-card .thumb{height:150px;background:linear-gradient(135deg,var(--orange-glow),var(--black-raised));display:flex;align-items:center;justify-content:center;font-size:2rem;color:var(--orange);}
+.listing-card .body{padding:18px;}
+.listing-card .cat{font-family:var(--font-mono);font-size:.65rem;color:var(--orange);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;}
+.listing-card h4{font-family:var(--font-head);font-size:.95rem;font-weight:700;margin-bottom:8px;}
+.listing-card .price-row{display:flex;justify-content:space-between;align-items:center;}
+.listing-card .price{font-family:var(--font-head);font-weight:800;color:var(--white);}
+.listing-card .cond{font-family:var(--font-mono);font-size:.65rem;padding:3px 8px;border-radius:4px;background:rgba(80,200,120,.12);color:var(--green);border:1px solid rgba(80,200,120,.3);}
+#c1{transform:translateX(-140px) rotate(-10deg) scale(.9);z-index:1;opacity:.7;}
+#c2{transform:translateX(0) rotate(0deg) scale(1.05);z-index:3;}
+#c3{transform:translateX(140px) rotate(10deg) scale(.9);z-index:1;opacity:.7;}
+.listing-stage:hover #c1{transform:translateX(-170px) rotate(-14deg) scale(.92);}
+.listing-stage:hover #c3{transform:translateX(170px) rotate(14deg) scale(.92);}
+.listing-stage:hover #c2{transform:translateY(-10px) scale(1.08);}
+
+.showcase-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;}
+.browser-mock{border-radius:12px;overflow:hidden;border:1px solid var(--black-border);background:var(--black-card);transition:transform .35s;}
+.browser-mock:hover{transform:translateY(-6px);border-color:var(--orange-line);}
+.browser-bar{display:flex;gap:6px;padding:10px 14px;background:var(--black-raised);border-bottom:1px solid var(--black-border);}
+.browser-bar span{width:9px;height:9px;border-radius:50%;background:#3a3a3a;}
+.browser-bar span:nth-child(1){background:#FF5F57;} .browser-bar span:nth-child(2){background:#FEBC2E;} .browser-bar span:nth-child(3){background:#28C840;}
+.browser-body{height:170px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--orange-glow),rgba(14,14,14,.9));font-size:2rem;color:var(--orange);}
+.showcase-label{padding:14px 16px;font-family:var(--font-head);font-weight:700;font-size:.88rem;border-top:1px solid var(--black-border);}
+.showcase-label span{display:block;font-family:var(--font-mono);font-size:.7rem;color:var(--white-muted);font-weight:400;margin-top:3px;}
+
+/* highlights */
+.grid-4b{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
+.highlight-card{padding:26px 22px;border-radius:12px;background:var(--black-card);border:1px solid var(--black-border);transition:all .25s;}
+.highlight-card:hover{border-color:var(--orange-line);transform:translateY(-4px);}
+.highlight-card i{font-size:1.3rem;color:var(--orange);margin-bottom:14px;}
+.highlight-card h4{font-family:var(--font-head);font-size:.92rem;font-weight:700;}
+
+/* cta */
+.cta-section{text-align:center;border-radius:24px;padding:90px 6%;background:linear-gradient(160deg,var(--orange-glow),rgba(14,14,14,.4));border:1px solid var(--black-border);position:relative;overflow:hidden;}
+.cta-section::before{content:'';position:absolute;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(255,107,26,.2),transparent 70%);top:-220px;left:50%;transform:translateX(-50%);filter:blur(40px);}
+.cta-section h2{font-family:var(--font-head);font-size:clamp(1.9rem,4.5vw,3rem);font-weight:800;margin-bottom:18px;position:relative;z-index:2;letter-spacing:-1.5px;}
+.cta-section p{color:var(--white-dim);max-width:500px;margin:0 auto 36px;position:relative;z-index:2;font-weight:300;}
+.cta-actions{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;position:relative;z-index:2;}
+
+/* footer */
+footer{padding:60px 6% 30px;border-top:1px solid var(--black-border);max-width:1200px;margin:0 auto;}
+.footer-top{display:flex;justify-content:space-between;flex-wrap:wrap;gap:36px;margin-bottom:40px;}
+.footer-brand p{color:var(--white-muted);font-size:.85rem;max-width:300px;margin-top:12px;line-height:1.6;font-weight:300;}
+.footer-built{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;}
+.footer-built span{font-family:var(--font-mono);font-size:.68rem;padding:5px 12px;border-radius:100px;border:1px solid var(--black-border);color:var(--white-muted);}
+.footer-social{display:flex;gap:12px;}
+.footer-social a{width:38px;height:38px;border-radius:50%;border:1px solid var(--black-border);display:flex;align-items:center;justify-content:center;transition:all .25s;color:var(--white-muted);}
+.footer-social a:hover{background:var(--orange);border-color:var(--orange);color:#000;transform:translateY(-3px);}
+.footer-bottom{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;padding-top:24px;border-top:1px solid var(--black-border);font-family:var(--font-mono);font-size:.72rem;color:var(--white-muted);}
+.heart{color:#EF4444;}
+
+#back-to-top{position:fixed;bottom:30px;right:30px;width:48px;height:48px;border-radius:50%;background:var(--orange);display:flex;align-items:center;justify-content:center;color:#000;font-size:1rem;cursor:pointer;z-index:999;opacity:0;pointer-events:none;transform:translateY(16px);transition:all .3s;}
+#back-to-top.show{opacity:1;pointer-events:auto;transform:translateY(0);}
+#back-to-top:hover{background:var(--orange-hot);}
+
+.divider{height:1px;max-width:1100px;margin:0 auto;background:linear-gradient(90deg,transparent,var(--black-border),transparent);}
+
+@media(max-width:1080px){
+  .grid-4,.grid-4b{grid-template-columns:repeat(2,1fr);}
+  .grid-6{grid-template-columns:repeat(3,1fr);}
+  .stats-wrap{grid-template-columns:repeat(2,1fr);}
+  .showcase-grid{grid-template-columns:repeat(2,1fr);}
+}
+@media(max-width:768px){
+  .nav-links{position:fixed;top:0;right:-100%;width:72%;height:100vh;background:rgba(14,14,14,.98);backdrop-filter:blur(20px);flex-direction:column;justify-content:center;gap:22px;transition:right .4s;}
+  .nav-links.open{right:0;}
+  .burger{display:block;}
+  .grid-4,.grid-4b,.grid-6{grid-template-columns:repeat(2,1fr);}
+  .stats-wrap,.showcase-grid{grid-template-columns:1fr;}
+  section{padding:80px 6%;}
+  .cta-section{padding:60px 6%;}
+  #cursor-dot,#cursor-ring{display:none;} body{cursor:auto;}
+  .listing-stage{min-height:340px;}
+  .listing-card{width:210px;}
+  #c1{transform:translateX(-70px) rotate(-8deg) scale(.85);}
+  #c3{transform:translateX(70px) rotate(8deg) scale(.85);}
+}
+</style>
+</head>
+<body>
+
+<div id="cursor-dot"></div>
+<div id="cursor-ring"></div>
+<div id="scroll-progress"></div>
+<div id="mouse-glow"></div>
+
+<nav id="navbar">
+  <div class="logo"><div class="logo-mark"><i class="fa-solid fa-graduation-cap"></i></div>StudyMart</div>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="#home">Home</a></li>
+    <li><a href="#features">Features</a></li>
+    <li><a href="#techstack">Tech Stack</a></li>
+    <li><a href="#architecture">Architecture</a></li>
+    <li><a href="#showcase">Showcase</a></li>
+    <li><a href="http://studybazar.vercel.app" target="_blank" class="nav-cta">Visit</a></li>
+  </ul>
+  <div class="burger" id="burger"><i class="fa-solid fa-bars"></i></div>
+</nav>
+
+<section class="hero" id="home">
+  <div class="hero-grid-bg"></div>
+  <div class="blob blob1"></div>
+  <div class="blob blob2"></div>
+  <div class="blob blob3"></div>
+  <div id="particles"></div>
+
+  <div class="hero-content">
+    <div class="hero-badge"><span class="dot"></span> Now live for students everywhere</div>
+    <h1><span class="gradient-text">StudyMart</span></h1>
+    <p class="hero-sub">The Ultimate Marketplace Built for Students</p>
+    <p class="hero-desc">Buy and sell textbooks, notes, lab equipment, calculators, and electronics inside a dedicated student ecosystem — built for affordability, trust, and convenience.</p>
+    <div class="hero-actions">
+      <a href="http://studybazar.vercel.app" target="_blank" class="btn btn-primary"><i class="fa-solid fa-arrow-up-right-from-square"></i> Visit Website</a>
+      <a href="#features" class="btn btn-outline"><i class="fa-solid fa-compass"></i> Explore Features</a>
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat"><b>50+</b><span>APIs</span></div>
+      <div class="hero-stat"><b>20+</b><span>Features</span></div>
+      <div class="hero-stat"><b>100%</b><span>Responsive</span></div>
+    </div>
+  </div>
+  <div class="scroll-cue"><span>Scroll</span><i class="fa-solid fa-chevron-down"></i></div>
+</section>
+
+<section id="features">
+  <div class="section-head">
+    <div class="eyebrow">Features</div>
+    <h2>Everything a student marketplace needs</h2>
+    <p>From listing a product to getting paid safely — every step is built with students in mind.</p>
+  </div>
+  <div class="grid-4" id="featuresGrid"></div>
+</section>
+
+<div class="divider"></div>
+
+<section id="why">
+  <div class="section-head">
+    <div class="eyebrow">Why StudyMart</div>
+    <h2>Built around what students actually need</h2>
+    <p>Not another generic marketplace — a platform shaped by real student habits and budgets.</p>
+  </div>
+  <div class="timeline" id="timeline"></div>
+</section>
+
+<div class="divider"></div>
+
+<section id="techstack">
+  <div class="section-head">
+    <div class="eyebrow">Technology Stack</div>
+    <h2>Engineered on a modern, production-grade stack</h2>
+    <p>Every layer, from the interface to the database, chosen for speed, safety, and scale.</p>
+  </div>
+  <div class="grid-6" id="techGrid"></div>
+</section>
+
+<div class="divider"></div>
+
+<section id="stats">
+  <div class="section-head">
+    <div class="eyebrow">Platform Statistics</div>
+    <h2>Numbers that speak for the build</h2>
+  </div>
+  <div class="stats-wrap">
+    <div class="stat-card"><div class="stat-num counter" data-target="50">0</div><p>APIs Built</p></div>
+    <div class="stat-card"><div class="stat-num counter" data-target="20">0</div><p>Core Features</p></div>
+    <div class="stat-card"><div class="stat-num counter" data-target="100">0</div><p>% Responsive</p></div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<section id="architecture">
+  <div class="section-head">
+    <div class="eyebrow">Architecture</div>
+    <h2>A clean, scalable request flow</h2>
+    <p>From the browser to the database and back — every request follows a predictable, secure path.</p>
+  </div>
+  <div class="arch-flow">
+    <div class="arch-node"><i class="fa-solid fa-globe"></i> Browser</div>
+    <div class="arch-line"></div>
+    <div class="arch-node"><i class="fa-brands fa-node-js"></i> Next.js Frontend</div>
+    <div class="arch-line"></div>
+    <div class="arch-node"><i class="fa-solid fa-bolt"></i> FastAPI Backend</div>
+    <div class="arch-line"></div>
+    <div class="arch-node"><i class="fa-solid fa-leaf"></i> MongoDB</div>
+    <div class="arch-line"></div>
+    <div class="arch-node"><i class="fa-solid fa-cloud"></i> Cloudinary</div>
+    <div class="arch-line"></div>
+    <div class="arch-node"><i class="fa-solid fa-lock"></i> JWT Authentication</div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- SHOWCASE — signature listing card stack -->
+<section id="showcase">
+  <div class="section-head">
+    <div class="eyebrow">Showcase</div>
+    <h2>A closer look at a real listing</h2>
+    <p>Every product card carries a category, a price, and a condition badge — nothing hidden until checkout.</p>
+  </div>
+  <div class="listing-stage">
+    <div class="listing-card" id="c1">
+      <div class="thumb"><i class="fa-solid fa-calculator"></i></div>
+      <div class="body"><div class="cat">Electronics</div><h4>Scientific Calculator</h4><div class="price-row"><span class="price">₹450</span><span class="cond">Good</span></div></div>
+    </div>
+    <div class="listing-card" id="c2">
+      <div class="thumb"><i class="fa-solid fa-book"></i></div>
+      <div class="body"><div class="cat">Textbooks</div><h4>Digital Signal Processing</h4><div class="price-row"><span class="price">₹320</span><span class="cond">Like New</span></div></div>
+    </div>
+    <div class="listing-card" id="c3">
+      <div class="thumb"><i class="fa-solid fa-flask"></i></div>
+      <div class="body"><div class="cat">Lab Gear</div><h4>Digital Multimeter</h4><div class="price-row"><span class="price">₹600</span><span class="cond">Fair</span></div></div>
+    </div>
+  </div>
+  <div class="showcase-grid" id="showcaseGrid" style="margin-top:60px;"></div>
+</section>
+
+<div class="divider"></div>
+
+<section id="highlights">
+  <div class="section-head">
+    <div class="eyebrow">Project Highlights</div>
+    <h2>Why StudyMart holds up under real use</h2>
+  </div>
+  <div class="grid-4b" id="highlightsGrid"></div>
+</section>
+
+<section>
+  <div class="cta-section">
+    <h2>Ready to Explore <span class="gradient-text">StudyMart?</span></h2>
+    <p>Join a growing community of students trading textbooks, notes, and gear — safely and affordably.</p>
+    <div class="cta-actions">
+      <a href="http://studybazar.vercel.app" target="_blank" class="btn btn-primary"><i class="fa-solid fa-arrow-up-right-from-square"></i> Visit Website</a>
+      <a href="#" class="btn btn-outline"><i class="fa-brands fa-github"></i> GitHub</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-top">
+    <div class="footer-brand">
+      <div class="logo"><div class="logo-mark"><i class="fa-solid fa-graduation-cap"></i></div>StudyMart</div>
+      <p>Made with <i class="fa-solid fa-heart heart"></i> for students, by students.</p>
+      <div class="footer-built"><span>Next.js</span><span>FastAPI</span><span>MongoDB</span><span>Cloudinary</span><span>Redux Toolkit</span></div>
+    </div>
+    <div class="footer-social">
+      <a href="#"><i class="fa-brands fa-github"></i></a>
+      <a href="#"><i class="fa-brands fa-linkedin-in"></i></a>
+      <a href="#"><i class="fa-solid fa-envelope"></i></a>
+    </div>
+  </div>
+  <div class="divider"></div>
+  <div class="footer-bottom">
+    <span>© 2026 StudyMart. All rights reserved.</span>
+    <span>Built for students who deserve better than a generic marketplace.</span>
+  </div>
+</footer>
+
+<div id="back-to-top"><i class="fa-solid fa-arrow-up"></i></div>
+
+<script>
+/* ---------- Data ---------- */
+const features = [
+  {icon:'fa-solid fa-shield-halved', title:'Secure Authentication', desc:'JWT-based access and refresh tokens keep every account protected.'},
+  {icon:'fa-solid fa-store', title:'Student Marketplace', desc:'A dedicated space to buy and sell academic essentials.'},
+  {icon:'fa-solid fa-tags', title:'Product Listings', desc:'List books, notes, and gear in seconds with rich detail.'},
+  {icon:'fa-solid fa-cloud-arrow-up', title:'Cloud Image Upload', desc:'Cloudinary-powered uploads for fast, reliable product photos.'},
+  {icon:'fa-solid fa-cart-shopping', title:'Shopping Cart', desc:'Collect items across sellers before checking out in one go.'},
+  {icon:'fa-solid fa-magnifying-glass', title:'Advanced Search', desc:'Filter by category, price, and condition to find items fast.'},
+  {icon:'fa-solid fa-box', title:'Order Management', desc:'Track every purchase and sale from request to delivery.'},
+  {icon:'fa-solid fa-heart', title:'Wishlist', desc:'Save items you are watching and get notified on price drops.'},
+  {icon:'fa-solid fa-flag', title:'Product Reports', desc:'Flag suspicious listings to keep the marketplace trustworthy.'},
+  {icon:'fa-solid fa-mobile-screen', title:'Responsive UI', desc:'A consistent experience across desktop, tablet, and mobile.'},
+  {icon:'fa-solid fa-server', title:'FastAPI Backend', desc:'A fast, type-safe Python backend powering every request.'},
+  {icon:'fa-solid fa-database', title:'MongoDB Database', desc:'Flexible, document-based storage built to scale with usage.'}
+];
+const whyItems = [
+  {icon:'fa-solid fa-indian-rupee-sign', title:'Affordable', desc:'Prices set by students, for students — no marketplace markup.'},
+  {icon:'fa-solid fa-user-graduate', title:'Student Focused', desc:'Every feature is shaped around real campus buying habits.'},
+  {icon:'fa-solid fa-wand-magic-sparkles', title:'Easy to Use', desc:'A clean interface that gets out of the way of the task at hand.'},
+  {icon:'fa-solid fa-lock', title:'Secure', desc:'JWT authentication and validated data on every request.'},
+  {icon:'fa-solid fa-gauge-high', title:'Fast', desc:'A FastAPI backend built for quick responses under load.'},
+  {icon:'fa-solid fa-arrow-up-right-dots', title:'Scalable', desc:'Architecture ready to grow from one campus to many.'}
+];
+const techs = [
+  {icon:'fa-brands fa-html5', name:'HTML5'}, {icon:'fa-brands fa-css3-alt', name:'CSS3'},
+  {icon:'fa-brands fa-square-js', name:'JavaScript'}, {icon:'fa-solid fa-n', name:'Next.js'},
+  {icon:'fa-brands fa-react', name:'Redux'}, {icon:'fa-brands fa-python', name:'Python'},
+  {icon:'fa-solid fa-bolt', name:'FastAPI'}, {icon:'fa-solid fa-leaf', name:'MongoDB'},
+  {icon:'fa-solid fa-cloud', name:'Cloudinary'}, {icon:'fa-brands fa-git-alt', name:'Git'},
+  {icon:'fa-brands fa-github', name:'GitHub'}, {icon:'fa-solid fa-key', name:'JWT'}
+];
+const showcaseItems = [
+  {icon:'fa-solid fa-house', title:'Home Page', sub:'Landing & discovery'},
+  {icon:'fa-solid fa-store', title:'Marketplace', sub:'Browse & filter listings'},
+  {icon:'fa-solid fa-chart-pie', title:'Profile Dashboard', sub:'Manage listings & orders'}
+];
+const highlights = [
+  {icon:'fa-solid fa-gauge-high', title:'Fast Performance'},
+  {icon:'fa-solid fa-shield-halved', title:'Secure Authentication'},
+  {icon:'fa-solid fa-layer-group', title:'Scalable Architecture'},
+  {icon:'fa-solid fa-cloud', title:'Cloud Storage'},
+  {icon:'fa-solid fa-palette', title:'Beautiful UI'},
+  {icon:'fa-solid fa-mobile-screen', title:'Responsive Design'},
+  {icon:'fa-solid fa-tower-broadcast', title:'Real-Time Ready'},
+  {icon:'fa-solid fa-infinity', title:'Future Proof'}
+];
+
+function renderGrid(id, items, builder){ document.getElementById(id).innerHTML = items.map(builder).join(''); }
+
+renderGrid('featuresGrid', features, f=>`
+  <div class="feature-card"><div class="feature-icon"><i class="${f.icon}"></i></div><h3>${f.title}</h3><p>${f.desc}</p></div>`);
+
+document.getElementById('timeline').innerHTML = whyItems.map(w=>`
+  <div class="timeline-item"><div class="timeline-dot"><i class="${w.icon}"></i></div><h3>${w.title}</h3><p>${w.desc}</p></div>`).join('');
+
+renderGrid('techGrid', techs, t=>`<div class="tech-card"><i class="${t.icon}"></i><p>${t.name}</p></div>`);
+
+renderGrid('showcaseGrid', showcaseItems, s=>`
+  <div class="browser-mock">
+    <div class="browser-bar"><span></span><span></span><span></span></div>
+    <div class="browser-body"><i class="${s.icon}"></i></div>
+    <div class="showcase-label">${s.title}<span>${s.sub}</span></div>
+  </div>`);
+
+renderGrid('highlightsGrid', highlights, h=>`
+  <div class="highlight-card"><i class="${h.icon}"></i><h4>${h.title}</h4></div>`);
+
+/* navbar */
+const navbar = document.getElementById('navbar');
+const navLinks = document.getElementById('navLinks');
+document.getElementById('burger').addEventListener('click', ()=>navLinks.classList.toggle('open'));
+navLinks.querySelectorAll('a').forEach(a=>a.addEventListener('click', ()=>navLinks.classList.remove('open')));
+
+window.addEventListener('scroll', ()=>{
+  navbar.classList.toggle('scrolled', window.scrollY > 40);
+  const h = document.documentElement;
+  const progress = (h.scrollTop||document.body.scrollTop) / ((h.scrollHeight||document.body.scrollHeight) - h.clientHeight) * 100;
+  document.getElementById('scroll-progress').style.width = progress+'%';
+  document.getElementById('back-to-top').classList.toggle('show', window.scrollY > 600);
+});
+document.getElementById('back-to-top').addEventListener('click', ()=>window.scrollTo({top:0, behavior:'smooth'}));
+
+/* cursor */
+const dot = document.getElementById('cursor-dot'), ring = document.getElementById('cursor-ring'), glow = document.getElementById('mouse-glow');
+let mx=0,my=0,rx=0,ry=0;
+window.addEventListener('mousemove', e=>{
+  mx=e.clientX; my=e.clientY;
+  dot.style.left=mx+'px'; dot.style.top=my+'px';
+  glow.style.left=mx+'px'; glow.style.top=my+'px';
+});
+function animateRing(){ rx+=(mx-rx)*.18; ry+=(my-ry)*.18; ring.style.left=rx+'px'; ring.style.top=ry+'px'; requestAnimationFrame(animateRing); }
+animateRing();
+document.querySelectorAll('a,button,.btn,.feature-card,.tech-card,.highlight-card,.browser-mock,.listing-card').forEach(el=>{
+  el.addEventListener('mouseenter', ()=>document.body.classList.add('cursor-hover'));
+  el.addEventListener('mouseleave', ()=>document.body.classList.remove('cursor-hover'));
+});
+
+/* parallax blobs */
+const blobs = document.querySelectorAll('.blob');
+document.querySelector('.hero').addEventListener('mousemove', e=>{
+  const cx=window.innerWidth/2, cy=window.innerHeight/2;
+  const dx=(e.clientX-cx)/cx, dy=(e.clientY-cy)/cy;
+  blobs.forEach((b,i)=>{ const s=(i+1)*14; b.style.transform=`translate(${dx*s}px, ${dy*s}px)`; });
+});
+
+/* particles */
+const pc = document.getElementById('particles');
+for(let i=0;i<36;i++){
+  const p=document.createElement('div'); p.className='particle';
+  const size=Math.random()*3+1;
+  p.style.width=size+'px'; p.style.height=size+'px';
+  p.style.left=Math.random()*100+'%'; p.style.top=Math.random()*100+'%';
+  p.style.animation=`floatParticle ${8+Math.random()*10}s linear infinite`;
+  p.style.animationDelay=(Math.random()*8)+'s';
+  pc.appendChild(p);
+}
+const styleTag=document.createElement('style');
+styleTag.innerHTML=`@keyframes floatParticle{0%{transform:translateY(0) translateX(0);opacity:0;}10%{opacity:.6;}90%{opacity:.6;}100%{transform:translateY(-120px) translateX(30px);opacity:0;}}`;
+document.head.appendChild(styleTag);
+
+/* counters */
+const counters = document.querySelectorAll('.counter');
+const counterObserver = new IntersectionObserver(entries=>{
+  entries.forEach(entry=>{
+    if(entry.isIntersecting){
+      const el=entry.target, target=+el.dataset.target; let cur=0;
+      const step=Math.max(target/60,1);
+      const tick=()=>{ cur+=step; if(cur>=target){ el.textContent=target+(target===100?'%':'+'); } else { el.textContent=Math.floor(cur)+(target===100?'%':'+'); requestAnimationFrame(tick); } };
+      tick(); counterObserver.unobserve(el);
+    }
+  });
+},{threshold:.5});
+counters.forEach(c=>counterObserver.observe(c));
+
+/* scroll reveal for grids/cards */
+const revealObserver = new IntersectionObserver(entries=>{
+  entries.forEach((entry,i)=>{
+    if(entry.isIntersecting){
+      entry.target.style.transition='opacity .6s ease, transform .6s ease';
+      entry.target.style.opacity='1'; entry.target.style.transform='translateY(0)';
+      revealObserver.unobserve(entry.target);
+    }
+  });
+},{threshold:.12});
+document.querySelectorAll('.feature-card,.tech-card,.timeline-item,.stat-card,.highlight-card,.browser-mock').forEach(el=>{
+  el.style.opacity='0'; el.style.transform='translateY(20px)';
+  revealObserver.observe(el);
+});
+
+/* typing effect */
+window.addEventListener('load', ()=>{
+  const sub=document.querySelector('.hero-sub');
+  const full=sub.textContent; sub.textContent=''; sub.classList.add('typing');
+  let i=0;
+  const type=()=>{ if(i<=full.length){ sub.textContent=full.slice(0,i); i++; setTimeout(type,28); } else { sub.classList.remove('typing'); } };
+  setTimeout(type,500);
+});
+</script>
+</body>
+</html>
