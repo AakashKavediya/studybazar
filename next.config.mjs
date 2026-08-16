@@ -20,12 +20,6 @@ const nextConfig = {
         port: '',
         pathname: '/**',
       },
-      {
-        protocol: 'https',
-        hostname: 'images.unsplash.com',
-        port: '',
-        pathname: '/**',
-      },
     ],
     formats: ['image/avif', 'image/webp'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
@@ -33,9 +27,24 @@ const nextConfig = {
     minimumCacheTTL: 60,
     qualities: [70, 75, 80, 90],
   },
-  // ✅ ADD THIS BLOCK RIGHT HERE:
+
+  // ✅ Rewrites go here at the root level, NOT inside images
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: 'http://127.0.0.1:8000/:path*', 
+      },
+      // ✅ Add this specifically for Socket.IO to ensure it works
+      {
+        source: '/api/socket.io/:path*',
+        destination: 'http://127.0.0.1:8000/socket.io/:path*',
+      },
+    ];
+  },
+
   compiler: {
-    styledComponents: true, // This allows Next.js to process the <style jsx> tags
+    styledComponents: true,
   },
   reactCompiler: true,
 };

@@ -1,4 +1,3 @@
-// components/AuthInitializer.jsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -7,9 +6,10 @@ import {
     setAccessToken,
     clearAccessToken,
     setUser,
-    setLoading,
 } from "@/features/auth/authSlice";
 import { fetchUserProfile } from "@/services/profileService";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
 
 export default function AuthInitializer({ children }) {
     const dispatch = useDispatch();
@@ -20,15 +20,12 @@ export default function AuthInitializer({ children }) {
             try {
                 console.log("🔄 Restoring session...");
                 
-                // Step 1: Refresh access token
                 const refreshResponse = await fetch(
-                    "http://127.0.0.1:8000/auth/refresh",
+                    `${API_URL}/auth/refresh`,
                     {
                         method: "POST",
                         credentials: "include",
-                        headers: {
-                            "Content-Type": "application/json",
-                        },
+                        headers: { "Content-Type": "application/json" },
                     }
                 );
 
@@ -39,18 +36,19 @@ export default function AuthInitializer({ children }) {
                     const accessToken = refreshData.access_token;
                     
                     if (accessToken) {
-                        // Step 2: Set access token in Redux
                         dispatch(setAccessToken(accessToken));
                         console.log("🔑 Access token set in Redux");
                         
-                        // Step 3: Fetch user profile
                         try {
                             const userData = await fetchUserProfile(accessToken);
-                            dispatch(setUser(userData));
-                            console.log("👤 User profile loaded:", userData.name);
+                            if (userData) {
+                                console.log("👤 User profile loaded successfully:", userData.name || "User");
+                                dispatch(setUser(userData));
+                            } else {
+                                console.warn("⚠️ User profile data was empty or invalid.");
+                            }
                         } catch (profileError) {
                             console.error("❌ Failed to fetch profile:", profileError);
-                            // Keep token but no user data
                         }
                     }
                 } else {

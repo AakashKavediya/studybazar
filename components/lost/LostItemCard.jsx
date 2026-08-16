@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { FaClock, FaMapMarkerAlt, FaUser, FaEllipsisH } from "react-icons/fa";
 import { COLORS } from "@/constants/colors";
+import { ChatButton } from "@/components/chat";
 
 export default function LostItemCard({ item, onPress, onOptions }) {
   const [imageError, setImageError] = useState(false);
@@ -132,6 +133,17 @@ export default function LostItemCard({ item, onPress, onOptions }) {
           <span>{location}</span>
           <span className="text-[#6B6B6B]">•</span>
           <span>{campus}</span>
+        </div>
+        
+
+        {/* Chat Button */}
+        <div className="flex justify-between items-center mt-3">
+          <ChatButton 
+            targetUserId={item.user_id} 
+            productId={item.id} 
+            className="flex-1 max-w-[120px]"
+          />
+          <span className="text-xs text-[#6B6B6B]">{item.views_count || 0} views</span>
         </div>
 
         {/* Footer */}

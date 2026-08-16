@@ -1,190 +1,177 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
 import axios from "axios";
-import { FaArrowLeft, FaUser, FaClock, FaMapMarkerAlt, FaEllipsisH, FaCheckCircle, FaPaperPlane } from "react-icons/fa";
+import io from "socket.io-client";
+import { FaArrowLeft, FaPaperPlane } from "react-icons/fa";
+import { use } from "react"; // ✅ Import use() from React
 
 import Header from "@/components/Header";
 import BottomTabNav from "@/components/BottomTabNav";
+import MessageBubble from "@/components/chat/MessageBubble";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
 
-export default function LostItemDetailPage({ params }) {
+// ✅ This is the correct way to handle async params in Next.js 15+
+export default function ChatRoomPage({ params }) {
+  // Unwrap the params promise using React.use()
+  const { id: roomId } = use(params);
+
   const router = useRouter();
-  const { accessToken } = useSelector((state) => state.auth);
-  const [item, setItem] = useState(null);
-  const [comments, setComments] = useState([]);
-  const [commentText, setCommentText] = useState("");
+  const { accessToken, user } = useSelector((state) => state.auth);
+
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [imageError, setImageError] = useState(false);
-  const { id } = params;
+  const [socket, setSocket] = useState(null);
 
-  // --- Fetch Item Details + Comments ---
-  const fetchData = useCallback(async () => {
-    setIsLoading(true);
+  const messagesEndRef = useRef(null);
+
+  // Connect WebSocket
+  useEffect(() => {
+    if (!accessToken || !roomId) return;
+
+    const newSocket = io(API_URL, {
+      transports: ["websocket"],
+      path: "/socket.io",
+    });
+
+    newSocket.on("connect", () => {
+      console.log("✅ Socket connected");
+      newSocket.emit("join_room", { room_id: roomId });
+    });
+
+    newSocket.on("receive_message", (data) => {
+      setMessages((prev) => [...prev, data]);
+    });
+
+    newSocket.on("message_deleted", (data) => {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg._id === data.message_id ? { ...msg, is_deleted: true } : msg
+        )
+      );
+    });
+
+    setSocket(newSocket);
+
+    return () => {
+      newSocket.disconnect();
+    };
+  }, [accessToken, roomId]);
+
+  // Fetch message history
+  const fetchMessages = useCallback(async () => {
+    if (!accessToken || !roomId) return;
     try {
-      const headers = accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
-      
-      // Fetch Item
-      const itemRes = await axios.get(`${API_URL}/lost-and-found/${id}`, {
-        headers, withCredentials: true
-      });
-      setItem(itemRes.data.data);
-
-      // Fetch Comments
-      const commentRes = await axios.get(`${API_URL}/lost-and-found/${id}/comments`, {
-        headers, withCredentials: true
-      });
-      setComments(commentRes.data.data.comments || []);
+      const response = await axios.get(
+        `${API_URL}/chat/room/${roomId}/messages`,
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+          withCredentials: true,
+        }
+      );
+      setMessages(response.data);
     } catch (err) {
-      console.error("Error loading details:", err);
-      router.push("/lost-found");
+      console.error("Failed to load messages:", err);
     } finally {
       setIsLoading(false);
     }
-  }, [id, accessToken, router]);
+  }, [accessToken, roomId]);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => {
+    fetchMessages();
+  }, [fetchMessages]);
 
-  // --- Add Comment ---
-  const handleCommentSubmit = async (e) => {
+  // Auto-scroll to bottom
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  const handleSend = (e) => {
     e.preventDefault();
-    if (!commentText.trim() || !accessToken) return;
+    if (!input.trim() || !socket) return;
 
-    setIsSubmitting(true);
-    try {
-      await axios.post(
-        `${API_URL}/lost-and-found/${id}/comment`,
-        { content: commentText.trim() },
-        { headers: { Authorization: `Bearer ${accessToken}` }, withCredentials: true }
-      );
-      setCommentText("");
-      fetchData(); // Refresh
-    } catch (err) {
-      alert("Failed to post comment");
-    } finally { setIsSubmitting(false); }
+    socket.emit("send_message", {
+      room_id: roomId,
+      content: input.trim(),
+      sender_id: user?.id,
+    });
+
+    setInput("");
   };
 
-  // --- Submit Claim / Complaint ---
-  const handleClaimSubmit = async () => {
-    if (!accessToken) return router.push("/auth/signin");
-    const proof = prompt("Please describe your proof of ownership (e.g., 'I have a photo of myself with this item'):");
-    if (!proof) return;
-
-    try {
-      await axios.post(
-        `${API_URL}/lost-and-found/${id}/claim`,
-        { item_id: id, proof_description: proof, contact_info: "" },
-        { headers: { Authorization: `Bearer ${accessToken}` }, withCredentials: true }
-      );
-      alert("Claim submitted successfully! The owner will be notified.");
-    } catch (err) {
-      alert(err.response?.data?.detail || "Failed to submit claim");
-    }
+  const handleDelete = (messageId) => {
+    if (!socket) return;
+    socket.emit("delete_message", {
+      message_id: messageId,
+      user_id: user?.id,
+    });
   };
 
-  if (isLoading || !item) {
+  if (!roomId) {
     return (
-      <div className="min-h-screen bg-[#0A0A0A] text-white pb-20 flex justify-center items-center">
-        <div className="w-10 h-10 border-2 border-[#262626] border-t-[#F5A623] rounded-full animate-spin" />
+      <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center text-white">
+        <p>Invalid room ID</p>
       </div>
     );
   }
 
-  const { title, description, location, campus, user_name, status, is_resolved, images = [], created_at } = item;
-  const mainImage = images && images.length > 0 ? images[0] : null;
-
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-[#F5F5F5] pb-20">
+    <div className="min-h-screen bg-[#0A0A0A] text-white pb-20 flex flex-col">
       <Header />
 
-      <div className="max-w-2xl mx-auto px-4 py-4">
-        <button onClick={() => router.back()} className="flex items-center gap-2 text-[#A3A3A3] hover:text-white mb-4 transition-colors">
-          <FaArrowLeft size={16} /> Back
-        </button>
+      <div className="max-w-2xl mx-auto w-full px-4 flex flex-col h-[calc(100vh-140px)]">
+        {/* Header */}
+        <div className="flex items-center gap-4 py-4 border-b border-[#2A2A2A]">
+          <button onClick={() => router.back()} className="text-[#A3A3A3] hover:text-white">
+            <FaArrowLeft size={18} />
+          </button>
+          <h1 className="text-lg font-bold">Chat</h1>
+        </div>
 
-        {/* Item Image */}
-        <div className="bg-[#141414] rounded-2xl border border-[#2A2A2A] overflow-hidden mb-6 relative pt-[60%]">
-          {!imageError && mainImage ? (
-            <img src={mainImage} alt={title} className="absolute inset-0 w-full h-full object-cover" onError={() => setImageError(true)} />
+        {/* Messages Area */}
+        <div className="flex-1 overflow-y-auto py-4 space-y-2">
+          {isLoading ? (
+            <div className="text-center text-[#6B6B6B] py-10">Loading messages...</div>
+          ) : messages.length === 0 ? (
+            <div className="text-center text-[#6B6B6B] py-10">
+              No messages yet. Say hello!
+            </div>
           ) : (
-            <div className="absolute inset-0 flex items-center justify-center text-6xl bg-[#1E1E1E]">🎒</div>
+            messages.map((msg) => (
+              <MessageBubble
+                key={msg._id}
+                message={msg}
+                isOwn={msg.sender_id === user?.id}
+                onDelete={handleDelete}
+              />
+            ))
           )}
-          <div className={`absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-semibold uppercase backdrop-blur-sm z-10 ${status === 'lost' ? 'bg-[#EF4444]' : status === 'found' ? 'bg-[#34C759]' : 'bg-[#6B6B6B]'}`}>
-            {is_resolved ? "✅ Resolved" : status}
-          </div>
+          <div ref={messagesEndRef} />
         </div>
 
-        {/* Item Details */}
-        <div className="bg-[#141414] border border-[#2A2A2A] rounded-2xl p-5 mb-6">
-          <h1 className="text-2xl font-bold mb-2">{title}</h1>
-          <p className="text-[#A3A3A3] leading-relaxed mb-4">{description}</p>
-          
-          <div className="flex flex-wrap gap-4 text-sm text-[#A3A3A3] border-t border-[#2A2A2A] pt-4">
-            <span className="flex items-center gap-2"><FaMapMarkerAlt className="text-white" /> {location}</span>
-            <span className="flex items-center gap-2">• {campus}</span>
-            <span className="flex items-center gap-2"><FaUser /> {user_name || "Anonymous"}</span>
-            <span className="flex items-center gap-2"><FaClock /> {new Date(created_at).toLocaleDateString()}</span>
-          </div>
-        </div>
-
-        {/* Action Buttons - Complaint / Claim */}
-        {!is_resolved && (
-          <div className="flex gap-3 mb-6">
-            <button
-              onClick={handleClaimSubmit}
-              className="flex-1 py-3 bg-[#F5A623] text-black font-semibold rounded-xl hover:opacity-90 transition-all shadow-lg shadow-[#F5A623]/20"
-            >
-              🗣️ Report if you found this
-            </button>
-          </div>
-        )}
-
-        {/* Comments Section */}
-        <div className="bg-[#141414] border border-[#2A2A2A] rounded-2xl p-5">
-          <h3 className="text-lg font-semibold mb-4 flex items-center justify-between">
-            Comments
-            <span className="text-sm font-normal text-[#A3A3A3]">{comments.length}</span>
-          </h3>
-
-          {/* Comment Input */}
-          <form onSubmit={handleCommentSubmit} className="flex gap-3 mb-6">
-            <input
-              type="text"
-              placeholder="Add a comment..."
-              value={commentText}
-              onChange={(e) => setCommentText(e.target.value)}
-              className="flex-1 bg-[#1A1A1A] border border-[#2A2A2A] rounded-xl px-4 py-3 text-white placeholder:text-[#6B6B6B] focus:outline-none focus:border-white"
-            />
-            <button
-              type="submit"
-              disabled={!commentText.trim() || isSubmitting}
-              className="px-4 bg-white text-black rounded-xl font-semibold hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-            >
-              <FaPaperPlane size={16} />
-            </button>
-          </form>
-
-          {/* Comments List */}
-          <div className="space-y-4 max-h-[400px] overflow-y-auto pr-1">
-            {comments.length === 0 && (
-              <p className="text-center text-[#6B6B6B] text-sm py-4">No comments yet. Be the first!</p>
-            )}
-            {comments.map((c) => (
-              <div key={c.id} className="border-b border-[#2A2A2A] pb-3 last:border-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-sm font-semibold text-white">{c.user_name || "Anonymous"}</span>
-                  <span className="text-xs text-[#6B6B6B]">{new Date(c.created_at).toLocaleDateString()}</span>
-                </div>
-                <p className="text-sm text-[#A3A3A3]">{c.content}</p>
-              </div>
-            ))}
-          </div>
-        </div>
+        {/* Input Area */}
+        <form onSubmit={handleSend} className="py-4 border-t border-[#2A2A2A] flex gap-3">
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Type a message..."
+            className="flex-1 bg-[#1A1A1A] border border-[#2A2A2A] rounded-xl px-4 py-3 text-white placeholder:text-[#6B6B6B] focus:outline-none focus:border-white"
+          />
+          <button
+            type="submit"
+            disabled={!input.trim()}
+            className="px-4 bg-white text-black rounded-xl font-semibold hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+          >
+            <FaPaperPlane size={16} />
+          </button>
+        </form>
       </div>
+
       <BottomTabNav />
     </div>
   );

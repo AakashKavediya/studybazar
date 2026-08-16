@@ -1,24 +1,39 @@
 // services/profileService.js
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
 
-const API_BASE_URL = "http://127.0.0.1:8000";
-
-// Get current user profile
+// Get current user profile - handles BOTH response formats
 export async function fetchUserProfile(accessToken) {
-    const response = await fetch(`${API_BASE_URL}/auth/me`, {
-        method: "GET",
-        headers: {
-            "Authorization": `Bearer ${accessToken}`,
-            "Content-Type": "application/json",
-        },
-        credentials: "include",
-    });
-    
-    if (!response.ok) {
-        throw new Error("Failed to fetch profile");
+    try {
+        const response = await fetch(`${API_BASE_URL}/auth/me`, {
+            method: "GET",
+            headers: {
+                "Authorization": `Bearer ${accessToken}`,
+                "Content-Type": "application/json",
+            },
+            credentials: "include",
+        });
+        
+        if (!response.ok) {
+            throw new Error("Failed to fetch profile");
+        }
+        
+        const data = await response.json();
+        
+        // ✅ SAFE GUARD: Handle both response formats
+        // If the backend returns { user: {...} }, take user.
+        // If the backend returns the user directly, take data.
+        const userProfile = data.user || data;
+        
+        if (userProfile && (userProfile.id || userProfile._id)) {
+            return userProfile;
+        } else {
+            console.warn("⚠️ User profile data was empty or invalid:", userProfile);
+            return null;
+        }
+    } catch (error) {
+        console.error("❌ Profile fetch error:", error);
+        return null;
     }
-    
-    const data = await response.json();
-    return data.user;
 }
 
 // Update user profile
@@ -39,7 +54,7 @@ export async function updateUserProfile(accessToken, profileData) {
     }
     
     const data = await response.json();
-    return data.user;
+    return data.user || data;
 }
 
 // Update password
