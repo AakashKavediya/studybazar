@@ -1,4 +1,3 @@
-// components/lost-found/LostFoundModal.jsx
 "use client";
 
 import { useState, useRef } from "react";
@@ -6,7 +5,7 @@ import { useSelector } from "react-redux";
 import { FaTimes, FaCamera, FaSpinner, FaArrowLeft } from "react-icons/fa";
 import axios from "axios";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "${process.env.NEXT_PUBLIC_API_URL}";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export default function LostFoundModal({ isOpen, onClose, activeTab, onPostCreated }) {
   const { user, accessToken } = useSelector((state) => state.auth);
@@ -22,7 +21,7 @@ export default function LostFoundModal({ isOpen, onClose, activeTab, onPostCreat
   const [preview, setPreview] = useState(null);
   const fileInputRef = useRef(null);
 
-  // --- Cloudinary Upload ---
+  // Cloudinary Upload
   const handleImageUpload = async (file) => {
     if (!file) return;
     setIsUploading(true);
@@ -59,7 +58,7 @@ export default function LostFoundModal({ isOpen, onClose, activeTab, onPostCreat
     setFormData((prev) => ({ ...prev, image: null }));
   };
 
-  // --- Submit to Backend ---
+  // Submit to Backend
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.title.trim() || !formData.location.trim()) {
@@ -78,8 +77,9 @@ export default function LostFoundModal({ isOpen, onClose, activeTab, onPostCreat
         image: formData.image || null,
       };
 
+      // ✅ FIX: Added trailing slash
       const response = await axios.post(
-        `${API_URL}/lost-and-found`,
+        `${API_URL}/lost-and-found/`,
         payload,
         {
           headers: {
@@ -109,7 +109,7 @@ export default function LostFoundModal({ isOpen, onClose, activeTab, onPostCreat
   return (
     <div className="fixed inset-0 z-50 bg-[#0A0A0A] animate-fadeIn flex flex-col">
       
-      {/* --- 1. Modal Header --- */}
+      {/* Modal Header */}
       <div className="flex items-center justify-between px-4 py-4 border-b border-[#2A2A2A] bg-[#0A0A0A]">
         <div className="flex items-center gap-3">
           <button
@@ -124,7 +124,6 @@ export default function LostFoundModal({ isOpen, onClose, activeTab, onPostCreat
           </h2>
         </div>
 
-        {/* Close (X) Button */}
         <button
           onClick={onClose}
           className="w-10 h-10 flex items-center justify-center bg-[#1A1A1A] border border-[#2A2A2A] rounded-full text-[#A0A0A0] hover:text-white hover:border-[#F5A623] transition-all duration-200"
@@ -133,11 +132,10 @@ export default function LostFoundModal({ isOpen, onClose, activeTab, onPostCreat
         </button>
       </div>
 
-      {/* --- 2. Form Area --- */}
+      {/* Form Area */}
       <div className="flex-1 overflow-y-auto px-4 py-6 max-w-2xl mx-auto w-full">
         <form onSubmit={handleSubmit} className="space-y-5">
           
-          {/* Title */}
           <div>
             <label className="block text-[13px] font-medium text-[#A0A0A0] mb-1.5">
               Title <span className="text-[#FF3B30]">*</span>
@@ -152,7 +150,6 @@ export default function LostFoundModal({ isOpen, onClose, activeTab, onPostCreat
             />
           </div>
 
-          {/* Location */}
           <div>
             <label className="block text-[13px] font-medium text-[#A0A0A0] mb-1.5">
               Location <span className="text-[#FF3B30]">*</span>
@@ -167,7 +164,6 @@ export default function LostFoundModal({ isOpen, onClose, activeTab, onPostCreat
             />
           </div>
 
-          {/* Description */}
           <div>
             <label className="block text-[13px] font-medium text-[#A0A0A0] mb-1.5">
               Description <span className="text-[#6B6B6B]">(Optional)</span>
@@ -181,7 +177,6 @@ export default function LostFoundModal({ isOpen, onClose, activeTab, onPostCreat
             />
           </div>
 
-          {/* Image Upload */}
           <div>
             <label className="block text-[13px] font-medium text-[#A0A0A0] mb-1.5">
               Image <span className="text-[#6B6B6B]">(Optional)</span>
@@ -218,7 +213,6 @@ export default function LostFoundModal({ isOpen, onClose, activeTab, onPostCreat
             </div>
           </div>
 
-          {/* Submit Button */}
           <button
             type="submit"
             disabled={isSubmitting}
@@ -228,14 +222,6 @@ export default function LostFoundModal({ isOpen, onClose, activeTab, onPostCreat
           </button>
         </form>
       </div>
-
-      <style jsx>{`
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        .animate-fadeIn { animation: fadeIn 0.2s ease-out; }
-      `}</style>
     </div>
   );
 }
