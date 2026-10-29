@@ -133,9 +133,10 @@ const EndOfResults = () => (
 );
 
 export default function ProductListing({ 
-  initialProducts = [],
+  initialProducts = [], // ✅ Backend passes this in
+  isLoading = false,    // ✅ Backend passes this in
   itemsPerPage = 15,
-  loadMoreProducts,
+  loadMoreProducts,     // ✅ Optional function to fetch next page
   onChat,
   onLike,
   onProductPress
@@ -143,38 +144,49 @@ export default function ProductListing({
   const [products, setProducts] = useState(initialProducts);
   const [displayedProducts, setDisplayedProducts] = useState([]);
   const [page, setPage] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   
   const loaderRef = useRef(null);
   const observerRef = useRef(null);
 
-  // Calculate total pages based on items per page
-  const totalPages = Math.ceil(products.length / itemsPerPage);
-  const startIndex = 0;
-  const endIndex = page * itemsPerPage;
-  const currentDisplayed = products.slice(startIndex, endIndex);
-
-  // Update displayed products when page changes
+  // --- Update products when initialProducts changes (e.g., search or fetch) ---
   useEffect(() => {
+    setProducts(initialProducts);
+    setPage(1);
+    setHasMore(true);
+    setIsInitialLoad(true);
+  }, [initialProducts]);
+
+  // --- Pagination Logic ---
+  useEffect(() => {
+    const startIndex = 0;
+    const endIndex = page * itemsPerPage;
+    const currentDisplayed = products.slice(startIndex, endIndex);
+    
     setDisplayedProducts(currentDisplayed);
     setHasMore(endIndex < products.length);
-  }, [page, products]);
+    
+    // If initial load was true and we have data, turn it off
+    if (isInitialLoad && products.length > 0) {
+      setIsInitialLoad(false);
+    }
+  }, [page, products, itemsPerPage, isInitialLoad]);
 
-  // Load more products function
+  // --- Load More Products Function ---
   const loadMore = useCallback(async () => {
-    if (isLoading || !hasMore) return;
+    if (isLoadingMore || !hasMore || isLoading) return;
     
-    setIsLoading(true);
+    setIsLoadingMore(true);
     
-    // Simulate network delay or fetch from API
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    if (page < totalPages) {
+    // If there are more items in the already fetched array
+    if (page * itemsPerPage < products.length) {
       setPage(prev => prev + 1);
-    } else if (loadMoreProducts) {
-      // Fetch more products from backend
+      setIsLoadingMore(false);
+    } 
+    // If we need to fetch more from the backend
+    else if (loadMoreProducts) {
       try {
         const newProducts = await loadMoreProducts(page + 1);
         if (newProducts && newProducts.length > 0) {
@@ -186,16 +198,16 @@ export default function ProductListing({
       } catch (error) {
         console.error("Error loading more products:", error);
         setHasMore(false);
+      } finally {
+        setIsLoadingMore(false);
       }
     } else {
       setHasMore(false);
+      setIsLoadingMore(false);
     }
-    
-    setIsLoading(false);
-    setIsInitialLoad(false);
-  }, [isLoading, hasMore, page, totalPages, loadMoreProducts]);
+  }, [isLoadingMore, hasMore, page, products.length, itemsPerPage, loadMoreProducts, isLoading]);
 
-  // Intersection Observer for infinite scroll
+  // --- Intersection Observer for Infinite Scroll ---
   useEffect(() => {
     if (!loaderRef.current) return;
     
@@ -207,7 +219,8 @@ export default function ProductListing({
     
     observerRef.current = new IntersectionObserver((entries) => {
       const firstEntry = entries[0];
-      if (firstEntry.isIntersecting && hasMore && !isLoading && !isInitialLoad) {
+      // Only load more if we are not loading, have more data, and initial load is done
+      if (firstEntry.isIntersecting && hasMore && !isLoadingMore && !isInitialLoad && !isLoading) {
         loadMore();
       }
     }, options);
@@ -219,31 +232,15 @@ export default function ProductListing({
         observerRef.current.disconnect();
       }
     };
-  }, [hasMore, isLoading, loadMore, isInitialLoad]);
+  }, [hasMore, isLoadingMore, loadMore, isInitialLoad, isLoading]);
 
-  // Initial load animation
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsInitialLoad(false);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, []);
-
-  // Reset pagination when products change
-  useEffect(() => {
-    setPage(1);
-    setHasMore(true);
-    setIsInitialLoad(true);
-  }, [products.length]);
-
-  // Handle product actions
+  // --- Handle Product Actions ---
   const handleChat = (product) => {
     onChat?.(product);
   };
 
   const handleLike = (productId, liked) => {
     onLike?.(productId, liked);
-    // Update local state to reflect like
     setProducts(prev => prev.map(product => 
       product.id === productId 
         ? { ...product, isLiked: liked, likes: liked ? (product.likes || 0) + 1 : (product.likes || 0) - 1 }
@@ -264,7 +261,7 @@ export default function ProductListing({
       <div className="products-grid">
         {displayedProducts.map((product, index) => (
           <div 
-            key={product.id || index} 
+            key={product._id || product.id || index} 
             className="product-item"
             style={{ animationDelay: `${index * 0.05}s` }}
           >
@@ -277,8 +274,8 @@ export default function ProductListing({
           </div>
         ))}
         
-        {/* Loading Skeletons */}
-        {(isLoading || isInitialLoad) && (
+        {/* Loading Skeletons (Only show if initial load or loading more) */}
+        {(isLoading || isInitialLoad || isLoadingMore) && (
           <>
             {skeletonArray.map((_, index) => (
               <div key={`skeleton-${index}`} className="product-item">
@@ -295,9 +292,9 @@ export default function ProductListing({
       )}
       
       {/* Load More Trigger */}
-      {hasMore && !isInitialLoad && (
+      {hasMore && !isInitialLoad && !isLoading && (
         <div ref={loaderRef} className="loader-trigger">
-          {isLoading && (
+          {isLoadingMore && (
             <div className="loading-spinner">
               <div className="spinner"></div>
               <span>Loading more products...</span>

@@ -39,7 +39,7 @@ const RecentSearchIcon = () => (
   </svg>
 );
 
-export default function SearchBar() {
+export default function SearchBar({ onSearch }) { // ✅ Added onSearch prop
   const [searchQuery, setSearchQuery] = useState("");
   const [isFocused, setIsFocused] = useState(false);
   const [recentSearches, setRecentSearches] = useState([]);
@@ -67,15 +67,18 @@ export default function SearchBar() {
   const handleSearch = (query) => {
     if (!query.trim()) return;
     saveSearch(query);
-    // Navigate to search results page
-    window.location.href = `/search?q=${encodeURIComponent(query)}`;
+    setShowSuggestions(false);
+    setIsFocused(false);
+    // 🔥 FIX: Call the parent callback instead of reloading the page
+    if (onSearch) {
+      onSearch(query.trim());
+    }
   };
 
   // Handle key press
   const handleKeyPress = (e) => {
     if (e.key === "Enter") {
       handleSearch(searchQuery);
-      setShowSuggestions(false);
     }
   };
 
@@ -123,7 +126,7 @@ export default function SearchBar() {
               setIsFocused(true);
               setShowSuggestions(true);
             }}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyPress} // ✅ Changed from onKeyPress (deprecated)
             className="search-input"
           />
           
@@ -133,7 +136,7 @@ export default function SearchBar() {
             </button>
           )}
           
-          <button className="filter-button">
+          <button className="filter-button" onClick={() => alert("Filter modal coming soon!")}>
             <FilterIcon />
           </button>
         </div>

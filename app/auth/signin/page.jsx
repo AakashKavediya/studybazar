@@ -1,35 +1,42 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { setAccessToken} from "../../../features/auth/authSlice";
+import { setAccessToken } from "../../../features/auth/authSlice";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { COLORS } from "@/constants/colors";
 import Card from "@/components/ui/Card";
 import Field from "@/components/ui/Field";
-import { Button, GoogleButton } from "@/components/ui/Button";
 import { EyeIcon, EyeOffIcon } from "@/components/ui/Icons";
-
-// import dotenv from "dotenv";
-// dotenv.config();
-
-const LocalhostURL = process.env.localURL;
-const HostedURL = process.env.HostedURL;
+import { useGoogleAuth } from "@/hooks/useGoogleAuth";
 
 export default function SigninPage() {
   const dispatch = useDispatch();
   const router = useRouter();
-  const [form, setForm] = useState({
-    email: "",
-    password: "",
-  });
+
+  const [form, setForm] = useState({ email: "", password: "" });
   const [touched, setTouched] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
 
+  // ---------- Google Auth ----------
+  const googleBtnRef = useRef(null);
+  const {
+    renderGoogleButton,
+    isLoading: isGoogleLoading,
+    error: googleError,
+  } = useGoogleAuth({ redirectTo: "/" });
+
+  useEffect(() => {
+    if (googleBtnRef.current) {
+      renderGoogleButton(googleBtnRef.current);
+    }
+  }, [renderGoogleButton]);
+
+  // ---------- Field handling ----------
   const updateField = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
     setTouched((prev) => ({ ...prev, [field]: true }));
@@ -54,71 +61,50 @@ export default function SigninPage() {
     return null;
   };
 
-  const isFormValid = () => {
-    return !validateEmail(form.email) && !validatePassword(form.password);
-  };
+  const isFormValid = () =>
+    !validateEmail(form.email) && !validatePassword(form.password);
 
-
-/*
-Function: Handle Submit
-Parameters: email, password
-Use: This function handles the form submission for user login. It validates the input fields, sends a POST request to the backend API for authentication, and manages the response. If successful, it stores the access token in Redux and redirects the user to the home page. If there's an error, it displays an appropriate error message.
-*/ 
-
-const handleSubmit = async (e) => {
+  // ---------- Standard login ----------
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    setTouched({
-        email: true,
-        password: true,
-    });
-
+    setTouched({ email: true, password: true });
     if (!isFormValid()) return;
 
     setIsLoading(true);
     setApiError("");
 
     const payload = {
-        email: form.email.trim().toLowerCase(),
-        password: form.password,
+      email: form.email.trim().toLowerCase(),
+      password: form.password,
     };
 
     try {
-        const response = await fetch(
-            "http://127.0.0.1:8000/auth/login",
-            {
-                method: "POST",
-                credentials: "include", // Only need this once
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(payload),
-            }
-        );
+      const response = await fetch("http://3.107.168.22/auth/login", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
 
-        const data = await response.json();
+      const data = await response.json();
 
-        if (response.ok) {
-            dispatch(setAccessToken(data.access_token));
-            router.push("/");
+      if (response.ok) {
+        dispatch(setAccessToken(data.access_token));
+        router.push("/");
+      } else {
+        if (Array.isArray(data.detail)) {
+          setApiError(data.detail[0].msg || "Login failed");
         } else {
-            if (Array.isArray(data.detail)) {
-                setApiError(data.detail[0].msg || "Login failed");
-            } else {
-                setApiError(data.detail || "Invalid email or password");
-            }
+          setApiError(data.detail || "Invalid email or password");
         }
+      }
     } catch (error) {
-        console.error("Login Error:", error);
-        setApiError("Network error. Please try again.");
+      console.error("Login Error:", error);
+      setApiError("Network error. Please try again.");
     } finally {
-        setIsLoading(false);
+      setIsLoading(false);
     }
-};
-
-  const handleGoogleLogin = () => {
-    // Implement Google OAuth
-    window.location.href = "http://127.0.0.1:8000/auth/google";
   };
 
   return (
@@ -132,7 +118,7 @@ const handleSubmit = async (e) => {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
         }
-        
+
         .field-group { margin-bottom: 20px; }
         .label { font-size: 13px; font-weight: 500; margin-bottom: 6px; transition: color 0.2s ease; color: ${COLORS.textSecondary}; }
         .input-wrapper { position: relative; width: 100%; }
@@ -146,8 +132,6 @@ const handleSubmit = async (e) => {
         .divider { display: flex; align-items: center; gap: 12px; margin: 24px 0 20px; }
         .divider-line { flex: 1; height: 0.5px; background: ${COLORS.border}; }
         .divider-text { font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.3px; color: ${COLORS.textMuted}; }
-        .google-btn { width: 100%; background: ${COLORS.inputBg}; border: 1.5px solid ${COLORS.border}; border-radius: 14px; padding: 12px 16px; font-weight: 600; font-size: 15px; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; transition: all 0.2s; color: ${COLORS.textPrimary}; }
-        .google-btn:hover { background: ${COLORS.secondaryBg}; border-color: ${COLORS.primary}; }
         .checkbox-row { display: flex; align-items: center; justify-content: space-between; margin: 16px 0 24px; }
         .checkbox-label { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: ${COLORS.textSecondary}; }
         .checkbox-custom { width: 18px; height: 18px; border: 1.5px solid ${COLORS.border}; border-radius: 5px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; background: ${COLORS.inputBg}; }
@@ -163,6 +147,10 @@ const handleSubmit = async (e) => {
         .footer-text { text-align: center; margin-top: 28px; font-size: 15px; color: ${COLORS.textSecondary}; }
         .footer-link { color: ${COLORS.primary}; font-weight: 600; text-decoration: none; }
         .footer-link:hover { text-decoration: underline; }
+
+        .google-wrapper { width: 100%; display: flex; justify-content: center; align-items: center; min-height: 44px; margin-top: 2px; }
+        .google-wrapper > div { width: 100% !important; }
+        .google-wrapper iframe { margin: 0 auto; }
       `}</style>
 
       <Card>
@@ -262,10 +250,23 @@ const handleSubmit = async (e) => {
             <div className="divider-line" />
           </div>
 
-          <GoogleButton onClick={handleGoogleLogin} />
+          {/* Google Sign-In button */}
+          <div ref={googleBtnRef} className="google-wrapper" />
+
+          {googleError && (
+            <div style={{ marginTop: "10px", color: COLORS.error, fontSize: "13px", textAlign: "center" }}>
+              {googleError}
+            </div>
+          )}
+
+          {isGoogleLoading && (
+            <div style={{ marginTop: "10px", color: COLORS.textMuted, fontSize: "13px", textAlign: "center" }}>
+              Signing you in with Google...
+            </div>
+          )}
 
           <div className="footer-text">
-            Don't have an account?{" "}
+            Don&apos;t have an account?{" "}
             <Link href="/auth/signup" className="footer-link">
               Sign up
             </Link>

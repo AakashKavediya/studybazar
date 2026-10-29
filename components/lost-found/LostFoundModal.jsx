@@ -6,7 +6,7 @@ import { useSelector } from "react-redux";
 import { FaTimes, FaCamera, FaSpinner, FaArrowLeft } from "react-icons/fa";
 import axios from "axios";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://3.107.168.22";
 
 export default function LostFoundModal({ isOpen, onClose, activeTab, onPostCreated }) {
   const { user, accessToken } = useSelector((state) => state.auth);

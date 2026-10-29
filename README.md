@@ -942,7 +942,7 @@ border-color:  #FFFFFF;
 ### 🌐 Base URL
 
 ```
-http://127.0.0.1:8000
+http://3.107.168.22
 ```
 
 ### 🔐 Auth Endpoints

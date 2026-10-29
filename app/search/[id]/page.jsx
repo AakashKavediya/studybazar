@@ -1,3 +1,4 @@
+// app/search/[id]/page.jsx
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
@@ -10,10 +11,11 @@ import BottomTabNav from "@/components/BottomTabNav";
 import ProfileInfo from "@/components/profile/ProfileInfo";
 import ProfileProducts from "@/components/profile/ProfileProducts";
 import { ProfileHero, ProfileSkeleton } from "@/components/search_profile";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL ||
-  "http://127.0.0.1:8000";
+  "http://3.107.168.22";
 
 export default function SearchProfilePage() {
   const router = useRouter();
@@ -40,8 +42,10 @@ export default function SearchProfilePage() {
     setError(null);
 
     try {
-      const headers = accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
-      
+      const headers = accessToken
+        ? { Authorization: `Bearer ${accessToken}` }
+        : {};
+
       const response = await axios.get(`${API_URL}/users/${userId}`, {
         headers,
         withCredentials: true,
@@ -51,7 +55,6 @@ export default function SearchProfilePage() {
         const userData = response.data.user;
         setProfile(userData);
 
-        // Check if this is the current user's profile
         const currentUserId = String(currentUser?.id || "");
         const profileId = String(userData.id || "");
         const isOwn = currentUserId !== "" && currentUserId === profileId;
@@ -59,7 +62,6 @@ export default function SearchProfilePage() {
         setIsOwnProfile(isOwn);
         setIsFollowing(userData.is_following || false);
 
-        // If it's own profile, redirect to /profile
         if (isOwn) {
           router.replace("/profile");
         }
@@ -84,9 +86,10 @@ export default function SearchProfilePage() {
     if (!userId) return;
 
     try {
-      const headers = accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
-      
-      // You'll need to implement this endpoint later
+      const headers = accessToken
+        ? { Authorization: `Bearer ${accessToken}` }
+        : {};
+
       const response = await axios.get(`${API_URL}/users/${userId}/products`, {
         headers,
         withCredentials: true,
@@ -97,7 +100,6 @@ export default function SearchProfilePage() {
       }
     } catch (err) {
       console.error("Error fetching products:", err);
-      // Don't set error for products - just show empty
       setProducts([]);
     }
   }, [userId, accessToken]);
@@ -209,74 +211,83 @@ export default function SearchProfilePage() {
   // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#0A0A0A]">
-        <Header />
-        <div className="max-w-[1200px] mx-auto px-5 py-5 pb-10">
-          <ProfileSkeleton />
+      <ProtectedRoute>
+        <div className="min-h-screen bg-[#0A0A0A]">
+          <Header />
+          <div className="max-w-[1200px] mx-auto px-5 py-5 pb-10">
+            <ProfileSkeleton />
+          </div>
+          <BottomTabNav />
         </div>
-        <BottomTabNav />
-      </div>
+      </ProtectedRoute>
     );
   }
 
   // Error state
   if (error || !profile) {
     return (
-      <div className="min-h-screen bg-[#0A0A0A]">
-        <Header />
-        <div className="flex items-center justify-center h-[60vh]">
-          <div className="text-center">
-            <div className="w-20 h-20 rounded-full bg-[#1A1A1A] flex items-center justify-center mx-auto mb-4">
-              <span className="text-3xl">👤</span>
+      <ProtectedRoute>
+        <div className="min-h-screen bg-[#0A0A0A]">
+          <Header />
+          <div className="flex items-center justify-center h-[60vh]">
+            <div className="text-center">
+              <div className="w-20 h-20 rounded-full bg-[#1A1A1A] flex items-center justify-center mx-auto mb-4">
+                <span className="text-3xl">👤</span>
+              </div>
+              <p className="text-white text-lg font-medium">
+                {error === "User not found"
+                  ? "User not found"
+                  : "Something went wrong"}
+              </p>
+              <p className="text-[#666666] text-sm mt-1">
+                {error === "User not found"
+                  ? "The user you're looking for doesn't exist"
+                  : "Please try again later"}
+              </p>
+              <button
+                className="mt-4 text-[#F5A623] hover:underline"
+                onClick={handleBack}
+              >
+                Go back
+              </button>
             </div>
-            <p className="text-white text-lg font-medium">
-              {error === "User not found" ? "User not found" : "Something went wrong"}
-            </p>
-            <p className="text-[#666666] text-sm mt-1">
-              {error === "User not found"
-                ? "The user you're looking for doesn't exist"
-                : "Please try again later"}
-            </p>
-            <button
-              className="mt-4 text-[#F5A623] hover:underline"
-              onClick={handleBack}
-            >
-              Go back
-            </button>
           </div>
+          <BottomTabNav />
         </div>
-        <BottomTabNav />
-      </div>
+      </ProtectedRoute>
     );
   }
 
+  // Main state
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-[#F5F5F5] pb-20">
-      <Header />
+    <ProtectedRoute>
+      <div className="min-h-screen bg-[#0A0A0A] text-[#F5F5F5] pb-20">
+        <Header />
 
-      <div className="max-w-[1200px] mx-auto px-5 py-5 pb-10">
-        <ProfileHero
-          userData={userData}
-          isOwnProfile={isOwnProfile}
-          isFollowing={isFollowing}
-          isFollowLoading={isFollowLoading}
-          onFollow={handleFollow}
-          onMessage={handleMessage}
-          onEditClick={handleEdit}
-          onShareClick={handleShare}
-        />
+        <div className="max-w-[1200px] mx-auto px-5 py-5 pb-10">
+          <ProfileHero
+            userData={userData}
+            isOwnProfile={isOwnProfile}
+            isFollowing={isFollowing}
+            isFollowLoading={isFollowLoading}
+            onFollow={handleFollow}
+            onMessage={handleMessage}
+            onEditClick={handleEdit}
+            onShareClick={handleShare}
+          />
 
-        <ProfileInfo userData={userData} />
+          <ProfileInfo userData={userData} />
 
-        <ProfileProducts
-          productsListed={products}
-          productsSold={[]}
-          productsPurchased={[]}
-          isOwnProfile={isOwnProfile}
-        />
+          <ProfileProducts
+            productsListed={products}
+            productsSold={[]}
+            productsPurchased={[]}
+            isOwnProfile={isOwnProfile}
+          />
+        </div>
+
+        <BottomTabNav />
       </div>
-
-      <BottomTabNav />
-    </div>
+    </ProtectedRoute>
   );
 }

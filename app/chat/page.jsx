@@ -1,17 +1,13 @@
-// Create this file: app/chat/[roomId]/page.jsx
-
+// app/chat/page.jsx
 "use client";
 
-import { useParams } from "next/navigation";
-import ChatComponent from "@/components/chat";
+import ProtectedRoute from "@/components/ProtectedRoute";
+import HomeChatList from "@/components/home/HomeChatList";
 
-export default function ChatPage() {
-  const params = useParams();
-  const roomId = params.roomId;
-
-  if (!roomId) {
-    return <div>Loading chat...</div>;
-  }
-
-  return <ChatComponent roomId={roomId} />;
+export default function ChatListPage() {
+  return (
+    <ProtectedRoute>
+      <HomeChatList />
+    </ProtectedRoute>
+  );
 }

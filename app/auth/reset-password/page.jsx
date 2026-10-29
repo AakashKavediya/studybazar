@@ -68,7 +68,7 @@ function ResetPasswordContent() {
     setError("");
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/auth/reset-password", {
+      const response = await fetch("http://3.107.168.22/auth/reset-password", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

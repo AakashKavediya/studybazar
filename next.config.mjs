@@ -33,12 +33,11 @@ const nextConfig = {
     return [
       {
         source: '/api/:path*',
-        destination: 'http://127.0.0.1:8000/:path*', 
+        destination: 'http://3.107.168.22/:path*', 
       },
-      // ✅ Add this specifically for Socket.IO to ensure it works
       {
-        source: '/api/socket.io/:path*',
-        destination: 'http://127.0.0.1:8000/socket.io/:path*',
+        source: '/socket.io/:path*',
+        destination: 'http://3.107.168.22/socket.io/:path*',
       },
     ];
   },

@@ -4,7 +4,7 @@
 import { useMemo, useState, useCallback } from "react";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
-import { 
+import {
   FaGithub,
   FaTwitter,
   FaLinkedin,
@@ -22,8 +22,7 @@ import ProfileActions from "@/components/ui/ProfileActions";
 import ImageUploadModal from "@/components/ui/ImageUploadModal";
 
 const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ||
-  "http://127.0.0.1:8000";
+  process.env.NEXT_PUBLIC_API_URL || "http://3.107.168.22";
 
 function ProfileHero({
   userData,
@@ -32,6 +31,8 @@ function ProfileHero({
   setIsFollowing,
   onEditClick,
   onShareClick,
+  onFollowersClick,
+  onFollowingClick,
 }) {
   const dispatch = useDispatch();
   const { accessToken } = useSelector((state) => state.auth);
@@ -39,7 +40,7 @@ function ProfileHero({
   const [isUploading, setIsUploading] = useState(false);
   const [isFollowLoading, setIsFollowLoading] = useState(false);
 
-  // Memoize social links - filter out invalid URLs
+  // ---------- Social links ----------
   const socialLinks = useMemo(() => {
     const links = [
       { icon: FaGlobe, label: "Website", url: userData.social_links?.website },
@@ -47,17 +48,23 @@ function ProfileHero({
       { icon: FaLinkedin, label: "LinkedIn", url: userData.social_links?.linkedin },
       { icon: FaGithub, label: "GitHub", url: userData.social_links?.github },
     ];
-    return links.filter(link => link.url && link.url !== "#" && link.url.trim() !== "");
+    return links.filter(
+      (link) => link.url && link.url !== "#" && link.url.trim() !== ""
+    );
   }, [userData.social_links]);
 
-  // Memoize stats
-  const stats = useMemo(() => [
-    { label: "Products", value: userData.products_sold_count || 0 },
-    { label: "Sold", value: userData.active_listings_count || 0 },
-    { label: "Followers", value: userData.followers_count || 0 },
-  ], [userData]);
+  // ---------- Stats (from /users/stats) ----------
+  const stats = useMemo(
+    () => [
+      { label: "Products", value: userData.active_listings_count || 0 },
+      { label: "Sold", value: userData.products_sold_count || 0 },
+      { label: "Followers", value: userData.followers_count || 0 },
+      { label: "Following", value: userData.following_count || 0 },
+    ],
+    [userData]
+  );
 
-  // Memoize name parts
+  // ---------- Name parts ----------
   const nameParts = useMemo(() => {
     const fullName = userData.name || "";
     const parts = fullName.split(" ");
@@ -67,49 +74,37 @@ function ProfileHero({
     };
   }, [userData.name]);
 
-  // Memoize location
-  const location = useMemo(() => 
-    userData.campus || "Student",
+  const location = useMemo(
+    () => userData.campus || "Student",
     [userData.campus]
   );
 
-  // Memoize role
-  const role = useMemo(() => 
-    userData.year ? `${userData.year} Year Student` : "Student",
+  const role = useMemo(
+    () => (userData.year ? `${userData.year} Year Student` : "Student"),
     [userData.year]
   );
 
-  // Memoize skills
-  const skills = useMemo(() => 
-    userData.skills || [],
-    [userData.skills]
-  );
+  const skills = useMemo(() => userData.skills || [], [userData.skills]);
 
-  // Handle follow/unfollow
+  // ---------- Follow / Unfollow ----------
   const handleFollow = useCallback(async () => {
     if (!accessToken) {
-      router.push("/auth/signin");
       return;
     }
 
     setIsFollowLoading(true);
     try {
-      const endpoint = isFollowing ? "unfollow" : "follow";
+      const endpoint = isFollowing ? "follow" : "follow";
+      const method = isFollowing ? "DELETE" : "POST";
       const response = await axios({
-        method: isFollowing ? "DELETE" : "POST",
+        method,
         url: `${API_URL}/users/${userData.id}/${endpoint}`,
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
+        headers: { Authorization: `Bearer ${accessToken}` },
         withCredentials: true,
       });
 
-      if (response.data?.data) {
+      if (response.data?.data || response.status === 200) {
         setIsFollowing(!isFollowing);
-        // Update the user data with new followers count
-        if (response.data.data.followers_count !== undefined) {
-          // You can update the Redux store or local state here
-        }
       }
     } catch (err) {
       console.error("Error following/unfollowing:", err);
@@ -117,90 +112,65 @@ function ProfileHero({
     } finally {
       setIsFollowLoading(false);
     }
-  }, [userData.id, isFollowing, accessToken]);
+  }, [userData.id, isFollowing, accessToken, setIsFollowing]);
 
-  // Handle image upload
-  const handleImageUpload = useCallback(async (file) => {
-    setIsUploading(true);
-    try {
-      // Step 1: Upload to Cloudinary
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('upload_preset', process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || 'study-mart');
+  // ---------- Image upload ----------
+  const handleImageUpload = useCallback(
+    async (file) => {
+      setIsUploading(true);
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append(
+          "upload_preset",
+          process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "study-mart"
+        );
 
-      console.log('📤 Uploading to Cloudinary...');
-      
-      const cloudinaryResponse = await axios.post(
-        `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'dtdivzyct'}/image/upload`,
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-          timeout: 30000,
+        const cloudinaryResponse = await axios.post(
+          `https://api.cloudinary.com/v1_1/${
+            process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "dtdivzyct"
+          }/image/upload`,
+          formData,
+          {
+            headers: { "Content-Type": "multipart/form-data" },
+            timeout: 30000,
+          }
+        );
+
+        const imageUrl = cloudinaryResponse.data.secure_url;
+
+        const updateResponse = await axios.post(
+          `${API_URL}/users/profile_image`,
+          { profile_image: imageUrl },
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              "Content-Type": "application/json",
+            },
+            withCredentials: true,
+            timeout: 30000,
+          }
+        );
+
+        if (updateResponse.data?.user) {
+          dispatch(setUser(updateResponse.data.user));
         }
-      );
 
-      const imageUrl = cloudinaryResponse.data.secure_url;
-      console.log('✅ Uploaded to Cloudinary:', imageUrl);
-
-      // Step 2: Update profile using the dedicated POST /users/profile_image endpoint
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
-      
-      const updateResponse = await axios.post(
-        `${apiUrl}/users/profile_image`,
-        { profile_image: imageUrl },
-        {
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-          },
-          withCredentials: true,
-          timeout: 30000,
-        }
-      );
-
-      console.log('✅ Profile image updated:', updateResponse.data);
-      
-      // Update Redux store with the updated user data
-      if (updateResponse.data && updateResponse.data.user) {
-        dispatch(setUser(updateResponse.data.user));
+        setShowUploadModal(false);
+        alert("✅ Profile picture updated successfully!");
+      } catch (error) {
+        console.error("Image upload error:", error);
+        alert(
+          error.response?.data?.detail ||
+            error.message ||
+            "Failed to upload image"
+        );
+      } finally {
+        setIsUploading(false);
       }
-      
-      setShowUploadModal(false);
-      alert('✅ Profile picture updated successfully!');
-      
-    } catch (error) {
-      console.error('❌ Image upload error:', error);
-      
-      let errorMessage = 'Failed to upload image. ';
-      
-      if (error.response) {
-        console.error('Server error response:', error.response.data);
-        if (error.response.status === 401) {
-          errorMessage += 'Session expired. Please login again.';
-        } else if (error.response.status === 404) {
-          errorMessage += 'API endpoint not found. Please check the URL.';
-        } else {
-          errorMessage += error.response.data?.detail || 
-                        error.response.data?.message || 
-                        `Server error: ${error.response.status}`;
-        }
-      } else if (error.request) {
-        console.error('No response received:', error.request);
-        errorMessage += 'Server not reachable. Please check your connection.';
-      } else if (error.code === 'ECONNABORTED') {
-        errorMessage += 'Request timed out. Please try again.';
-      } else {
-        console.error('Request setup error:', error.message);
-        errorMessage += error.message || 'Please try again.';
-      }
-      
-      alert(errorMessage);
-    } finally {
-      setIsUploading(false);
-    }
-  }, [accessToken, dispatch]);
+    },
+    [accessToken, dispatch]
+  );
 
   return (
     <>
@@ -208,7 +178,7 @@ function ProfileHero({
         <CornerBrackets />
 
         <div className="p-5 sm:p-7">
-          {/* Top row: label + avatar */}
+          {/* Top row: role + location + avatar */}
           <div className="flex justify-between items-start mb-4">
             <div className="flex items-center gap-3">
               <span className="text-[10px] font-semibold tracking-[0.2em] text-[#A3A3A3] uppercase">
@@ -247,8 +217,12 @@ function ProfileHero({
           {/* Skills */}
           <ProfileSkills skills={skills} />
 
-          {/* Stats */}
-          <ProfileStats stats={stats} />
+          {/* Stats — now clickable for Followers/Following */}
+          <ProfileStats
+            stats={stats}
+            onFollowersClick={onFollowersClick}
+            onFollowingClick={onFollowingClick}
+          />
 
           {/* Social Links */}
           <ProfileSocialLinks links={socialLinks} />
@@ -266,7 +240,6 @@ function ProfileHero({
         </div>
       </div>
 
-      {/* Image Upload Modal - Only for own profile */}
       {isOwnProfile && (
         <ImageUploadModal
           isOpen={showUploadModal}

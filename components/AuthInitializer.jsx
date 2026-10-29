@@ -6,10 +6,11 @@ import {
     setAccessToken,
     clearAccessToken,
     setUser,
+    setInitialized,        // ← ADD
 } from "@/features/auth/authSlice";
 import { fetchUserProfile } from "@/services/profileService";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://3.107.168.22";
 
 export default function AuthInitializer({ children }) {
     const dispatch = useDispatch();
@@ -19,30 +20,30 @@ export default function AuthInitializer({ children }) {
         const restoreSession = async () => {
             try {
                 console.log("🔄 Restoring session...");
-                
-                const refreshResponse = await fetch(
-                    `${API_URL}/auth/refresh`,
-                    {
-                        method: "POST",
-                        credentials: "include",
-                        headers: { "Content-Type": "application/json" },
-                    }
-                );
+
+                const refreshResponse = await fetch(`${API_URL}/auth/refresh`, {
+                    method: "POST",
+                    credentials: "include",
+                    headers: { "Content-Type": "application/json" },
+                });
 
                 console.log("📡 Refresh Status:", refreshResponse.status);
 
                 if (refreshResponse.ok) {
                     const refreshData = await refreshResponse.json();
                     const accessToken = refreshData.access_token;
-                    
+
                     if (accessToken) {
                         dispatch(setAccessToken(accessToken));
                         console.log("🔑 Access token set in Redux");
-                        
+
                         try {
                             const userData = await fetchUserProfile(accessToken);
                             if (userData) {
-                                console.log("👤 User profile loaded successfully:", userData.name || "User");
+                                console.log(
+                                    "👤 User profile loaded successfully:",
+                                    userData.name || "User"
+                                );
                                 dispatch(setUser(userData));
                             } else {
                                 console.warn("⚠️ User profile data was empty or invalid.");
@@ -60,6 +61,7 @@ export default function AuthInitializer({ children }) {
                 dispatch(clearAccessToken());
             } finally {
                 setLoadingState(false);
+                dispatch(setInitialized(true));   // ← ADD
             }
         };
 

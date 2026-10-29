@@ -12,7 +12,7 @@ import Header from "@/components/Header";
 import BottomTabNav from "@/components/BottomTabNav";
 import MessageBubble from "@/components/chat/MessageBubble";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://3.107.168.22";
 
 // ✅ This is the correct way to handle async params in Next.js 15+
 export default function ChatRoomPage({ params }) {

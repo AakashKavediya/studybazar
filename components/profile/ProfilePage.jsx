@@ -149,7 +149,7 @@ export default function ProfilePage() {
     const handleLogout = useCallback(async () => {
         try {
             const response = await fetch(
-                "http://127.0.0.1:8000/auth/logout",
+                "http://3.107.168.22/auth/logout",
                 {
                     method: "POST",
                     credentials: "include",
