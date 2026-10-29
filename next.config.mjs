@@ -1,3 +1,4 @@
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
@@ -28,16 +29,22 @@ const nextConfig = {
     qualities: [70, 75, 80, 90],
   },
 
-  // ✅ Rewrites go here at the root level, NOT inside images
+  // Rewrites must use actual JavaScript template literals.
   async rewrites() {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
+    if (!apiUrl) {
+      throw new Error('NEXT_PUBLIC_API_URL is not configured');
+    }
+
     return [
       {
         source: '/api/:path*',
-        destination: '${process.env.NEXT_PUBLIC_API_URL}/:path*', 
+        destination: `${apiUrl}/:path*`,
       },
       {
         source: '/socket.io/:path*',
-        destination: '${process.env.NEXT_PUBLIC_API_URL}/socket.io/:path*',
+        destination: `${apiUrl}/socket.io/:path*`,
       },
     ];
   },
@@ -45,6 +52,7 @@ const nextConfig = {
   compiler: {
     styledComponents: true,
   },
+
   reactCompiler: true,
 };
 
