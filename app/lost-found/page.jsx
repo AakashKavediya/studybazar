@@ -19,7 +19,7 @@ import LostFoundModal from "@/components/lost-found/LostFoundModal";
 // Icons
 import { FaPlus } from "react-icons/fa";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://3.107.168.22";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "${process.env.NEXT_PUBLIC_API_URL}";
 
 export default function LostFoundPage() {
   const router = useRouter();

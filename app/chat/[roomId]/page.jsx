@@ -8,7 +8,7 @@ import io from "socket.io-client";
 
 import ProtectedRoute from "@/components/ProtectedRoute";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://3.107.168.22";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "${process.env.NEXT_PUBLIC_API_URL}";
 
 const normalizeMessage = (payload) => {
   if (!payload) return null;

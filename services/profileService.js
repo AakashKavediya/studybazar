@@ -1,5 +1,5 @@
 // services/profileService.js
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://3.107.168.22";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "${process.env.NEXT_PUBLIC_API_URL}";
 
 // Get current user profile - handles BOTH response formats
 export async function fetchUserProfile(accessToken) {

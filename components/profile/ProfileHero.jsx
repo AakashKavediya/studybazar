@@ -22,7 +22,7 @@ import ProfileActions from "@/components/ui/ProfileActions";
 import ImageUploadModal from "@/components/ui/ImageUploadModal";
 
 const API_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://3.107.168.22";
+  process.env.NEXT_PUBLIC_API_URL || "${process.env.NEXT_PUBLIC_API_URL}";
 
 function ProfileHero({
   userData,

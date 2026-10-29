@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { setAccessToken, setUser } from "@/features/auth/authSlice";
 import { fetchUserProfile } from "@/services/profileService";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://3.107.168.22";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "${process.env.NEXT_PUBLIC_API_URL}";
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
 
 // ---------------------------------------------------------------------------

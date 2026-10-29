@@ -28,7 +28,7 @@ function VerifyEmailContent() {
 
     const verifyEmail = async () => {
       try {
-        const response = await fetch("http://3.107.168.22/auth/verify-email", {
+        const response = await fetch("${process.env.NEXT_PUBLIC_API_URL}/auth/verify-email", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

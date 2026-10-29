@@ -10,7 +10,7 @@ import {
 } from "@/features/auth/authSlice";
 import { fetchUserProfile } from "@/services/profileService";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://3.107.168.22";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "${process.env.NEXT_PUBLIC_API_URL}";
 
 export default function AuthInitializer({ children }) {
     const dispatch = useDispatch();

@@ -23,7 +23,7 @@ const FollowersModal = dynamic(() => import("@/components/profile/FollowersModal
 import { setUser, clearAccessToken } from "@/features/auth/authSlice";
 import { updateUserProfile, updatePassword, deleteAccount } from "@/services/profileService";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://3.107.168.22";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "${process.env.NEXT_PUBLIC_API_URL}";
 
 export default function ProfilePage() {
     const dispatch = useDispatch();

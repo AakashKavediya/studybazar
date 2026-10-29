@@ -942,7 +942,7 @@ border-color:  #FFFFFF;
 ### 🌐 Base URL
 
 ```
-http://3.107.168.22
+${process.env.NEXT_PUBLIC_API_URL}
 ```
 
 ### 🔐 Auth Endpoints

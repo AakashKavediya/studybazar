@@ -15,7 +15,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL ||
-  "http://3.107.168.22";
+  "${process.env.NEXT_PUBLIC_API_URL}";
 
 export default function SearchProfilePage() {
   const router = useRouter();

@@ -80,7 +80,7 @@ export default function SigninPage() {
     };
 
     try {
-      const response = await fetch("http://3.107.168.22/auth/login", {
+      const response = await fetch("${process.env.NEXT_PUBLIC_API_URL}/auth/login",  {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },

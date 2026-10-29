@@ -32,7 +32,7 @@ export default function ForgotPasswordPage() {
     setError("");
 
     try {
-      const response = await fetch("http://3.107.168.22/auth/forgot-password", {
+      const response = await fetch("${process.env.NEXT_PUBLIC_API_URL}/auth/forgot-password", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

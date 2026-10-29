@@ -13,7 +13,7 @@ import SearchBar from "@/components/ui/SearchBar";
 import FilterModal from "@/components/ui/FilterModal";
 import ProductListing from "@/components/ui/ProductListing";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://3.107.168.22";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "${process.env.NEXT_PUBLIC_API_URL}";
 
 // Chat Icon Component
 const ChatHeader = () => {

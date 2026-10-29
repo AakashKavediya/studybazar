@@ -10,7 +10,7 @@ export default function DebugPage() {
         const checkCookies = async () => {
             try {
                 const response = await fetch(
-                    "http://3.107.168.22/auth/debug-cookies",
+                    "${process.env.NEXT_PUBLIC_API_URL}/auth/debug-cookies",
                     {
                         credentials: "include",
                     }

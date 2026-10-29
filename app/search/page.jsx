@@ -15,7 +15,7 @@ import SearchHeader from "../../components/search/SearchHeader";
 import SearchResults from "../../components/search/SearchResults";
 
 // Constants
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://3.107.168.22";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "${process.env.NEXT_PUBLIC_API_URL}";
 
 // Main Search Component
 function SearchContent() {

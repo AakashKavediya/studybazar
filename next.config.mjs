@@ -33,11 +33,11 @@ const nextConfig = {
     return [
       {
         source: '/api/:path*',
-        destination: 'http://3.107.168.22/:path*', 
+        destination: '${process.env.NEXT_PUBLIC_API_URL}/:path*', 
       },
       {
         source: '/socket.io/:path*',
-        destination: 'http://3.107.168.22/socket.io/:path*',
+        destination: '${process.env.NEXT_PUBLIC_API_URL}/socket.io/:path*',
       },
     ];
   },
