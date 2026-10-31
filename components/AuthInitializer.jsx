@@ -3,20 +3,29 @@
 
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { setAccessToken, setInitialized, clearAccessToken, fetchCurrentUser } from "@/features/auth/authSlice";
+import { 
+  setAccessToken, 
+  setInitialized, 
+  clearAccessToken, 
+  fetchCurrentUser 
+} from "@/features/auth/authSlice";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export default function AuthInitializer({ children }) {
   const dispatch = useDispatch();
-  const { isInitialized } = useSelector((state) => state.auth);
+  const { isInitialized, accessToken } = useSelector((state) => state.auth);
 
   useEffect(() => {
+    // Only run the auth restoration once on app mount
+    if (isInitialized) return;
+
     const restoreSession = async () => {
       try {
+        // 1. Try to silently refresh the token using the HttpOnly cookie
         const refreshResponse = await fetch(`${API_URL}/auth/refresh`, {
           method: "POST",
-          credentials: "include",
+          credentials: "include", // Required for cookies
           headers: { "Content-Type": "application/json" },
         });
 
@@ -24,24 +33,44 @@ export default function AuthInitializer({ children }) {
           const data = await refreshResponse.json();
           if (data.access_token) {
             dispatch(setAccessToken(data.access_token));
-            // Now fetch user profile using the thunk
             await dispatch(fetchCurrentUser()).unwrap();
+            return; // Success, exit early
+          }
+        }
+
+        // 2. FALLBACK: If refresh fails (e.g., Safari blocked the cookie), 
+        // but we have a token in sessionStorage, use it.
+        if (accessToken) {
+          console.log("⚠️ Cookie refresh failed. Using sessionStorage fallback.");
+          await dispatch(fetchCurrentUser()).unwrap();
+        } else {
+          // No cookie and no session token -> logout
+          dispatch(clearAccessToken());
+        }
+
+      } catch (error) {
+        console.error("❌ Auth Restore Error:", error);
+        
+        // Even if there's a network error, if we have a token, try to use it
+        if (accessToken) {
+          try {
+            await dispatch(fetchCurrentUser()).unwrap();
+          } catch (e) {
+            dispatch(clearAccessToken());
           }
         } else {
           dispatch(clearAccessToken());
         }
-      } catch (error) {
-        console.error("❌ Auth Restore Error:", error);
-        dispatch(clearAccessToken());
       } finally {
+        // Always mark initialized so ProtectedRoute stops spinning
         dispatch(setInitialized(true));
       }
     };
 
-    if (!isInitialized) {
-      restoreSession();
-    }
-  }, [dispatch, isInitialized]);
+    restoreSession();
+    
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dispatch, isInitialized]); // Deliberately exclude accessToken so it doesn't re-run
 
   if (!isInitialized) {
     return (
