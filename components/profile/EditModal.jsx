@@ -4,7 +4,10 @@
 import { useState, useEffect, useCallback } from "react";
 import ModalHeader from "@/components/ui/ModalHeader";
 import ActionButtons from "@/components/ui/ActionButtons";
-import ProfileFormFields from "@/components/profile/ProfileFormFields";
+import FormInput from "@/components/ui/FormInput"; // Ensure you import this
+import FormTextarea from "@/components/ui/FormTextarea";
+import FormSection from "@/components/ui/FormSection";
+import SocialLinksInput from "./SocialLinksInput";
 
 export default function EditModal({
   isOpen,
@@ -21,15 +24,9 @@ export default function EditModal({
     year: "",
     bio: "",
     skills: "",
-    social_links: {
-      github: "",
-      twitter: "",
-      linkedin: "",
-      website: "",
-    },
+    social_links: { github: "", twitter: "", linkedin: "", website: "" },
   });
 
-  // Reset form when modal opens with new data
   useEffect(() => {
     if (isOpen && userData) {
       setFormData({
@@ -50,124 +47,142 @@ export default function EditModal({
     }
   }, [isOpen, userData]);
 
-  // Handle input changes
   const handleChange = useCallback((e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   }, []);
 
-  // Handle social link changes
   const handleSocialChange = useCallback((e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      social_links: {
-        ...prev.social_links,
-        [name]: value,
-      },
+      social_links: { ...prev.social_links, [name]: value },
     }));
   }, []);
 
-  // Handle form submission
-  const handleSubmit = useCallback(
-    (e) => {
-      e.preventDefault();
+  const handleSubmit = useCallback((e) => {
+    e.preventDefault();
 
-      // Prepare data for API
-      const updateData = {
-        name: formData.name,
-        phone: formData.phone,
-        campus: formData.campus,
-        branch: formData.branch,
-        year: formData.year ? parseInt(formData.year) : null,
-        bio: formData.bio,
-        skills: formData.skills
-          ? formData.skills.split(",").map((s) => s.trim()).filter((s) => s)
-          : [],
-        social_links: formData.social_links,
-      };
+    const updateData = {
+      name: formData.name,
+      phone: formData.phone,
+      campus: formData.campus,
+      branch: formData.branch,
+      year: formData.year ? parseInt(formData.year) : null,
+      bio: formData.bio,
+      skills: formData.skills ? formData.skills.split(",").map((s) => s.trim()).filter(Boolean) : [],
+      social_links: formData.social_links,
+    };
 
-      // Remove empty/null fields
-      Object.keys(updateData).forEach((key) => {
-        if (
-          updateData[key] === "" ||
-          updateData[key] === null ||
-          updateData[key] === undefined
-        ) {
-          delete updateData[key];
-        }
-      });
+    // Remove empty fields
+    Object.keys(updateData).forEach((key) => {
+      if (updateData[key] === "" || updateData[key] === null) {
+        delete updateData[key];
+      }
+    });
 
-      onSave(updateData);
-    },
-    [formData, onSave]
-  );
-
-  const handleClose = useCallback(() => {
-    if (!isLoading) {
-      onClose();
-    }
-  }, [isLoading, onClose]);
+    onSave(updateData);
+  }, [formData, onSave]);
 
   if (!isOpen) return null;
 
   return (
-    <div
-      className="fixed inset-0 bg-black/60 backdrop-blur-xl flex items-center justify-center z-[1000] p-5 animate-fadeIn"
-      onClick={handleClose}
-    >
-      <div
-        className="bg-[#161616] rounded-3xl max-w-[480px] w-full p-6 animate-scaleIn max-h-[90vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <ModalHeader title="Edit Profile" onClose={handleClose} disabled={isLoading} />
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-xl flex items-center justify-center z-[1000] p-5" onClick={onClose}>
+      <div className="bg-[#161616] rounded-3xl max-w-[480px] w-full p-6 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <ModalHeader title="Edit Profile" onClose={onClose} disabled={isLoading} />
 
-        <form onSubmit={handleSubmit}>
-          <ProfileFormFields
-            formData={formData}
-            userEmail={userData?.email || ""}
+        <form onSubmit={handleSubmit} className="flex flex-col gap-3 mb-5">
+          <FormInput
+            type="text"
+            name="name"
+            placeholder="Full Name"
+            value={formData.name}
             onChange={handleChange}
-            onSocialChange={handleSocialChange}
+            disabled={isLoading}
+            required
+          />
+
+          {/* 🔒 DISABLED EMAIL FIELD */}
+          <FormInput
+            type="email"
+            placeholder="Email"
+            value={userData?.email || ""}
+            disabled
+            readOnly
+            className="bg-[#1A1A1A] text-[#666666] cursor-not-allowed opacity-50"
+          />
+
+          <FormInput
+            type="tel"
+            name="phone"
+            placeholder="Phone Number"
+            value={formData.phone}
+            onChange={handleChange}
             disabled={isLoading}
           />
 
+          <FormInput
+            type="text"
+            name="campus"
+            placeholder="College/University"
+            value={formData.campus}
+            onChange={handleChange}
+            disabled={isLoading}
+          />
+
+          <FormInput
+            type="text"
+            name="branch"
+            placeholder="Branch/Department"
+            value={formData.branch}
+            onChange={handleChange}
+            disabled={isLoading}
+          />
+
+          <FormInput
+            type="number"
+            name="year"
+            placeholder="Year (1-5)"
+            value={formData.year}
+            onChange={handleChange}
+            disabled={isLoading}
+            min="1"
+            max="5"
+          />
+
+          <FormTextarea
+            name="bio"
+            placeholder="Bio"
+            value={formData.bio}
+            onChange={handleChange}
+            disabled={isLoading}
+            rows={3}
+          />
+
+          <FormInput
+            type="text"
+            name="skills"
+            placeholder="Skills (comma separated)"
+            value={formData.skills}
+            onChange={handleChange}
+            disabled={isLoading}
+          />
+
+          <FormSection title="Social Links">
+            <SocialLinksInput
+              socialLinks={formData.social_links}
+              onChange={handleSocialChange}
+              disabled={isLoading}
+            />
+          </FormSection>
+
           <ActionButtons
-            onCancel={handleClose}
+            onCancel={onClose}
             isSubmitting={isLoading}
             submitText="Save Changes"
             disabled={isLoading}
           />
         </form>
-
-        <style jsx>{`
-          @keyframes fadeIn {
-            from {
-              opacity: 0;
-            }
-            to {
-              opacity: 1;
-            }
-          }
-          @keyframes scaleIn {
-            from {
-              opacity: 0;
-              transform: scale(0.95);
-            }
-            to {
-              opacity: 1;
-              transform: scale(1);
-            }
-          }
-          .animate-fadeIn {
-            animation: fadeIn 0.3s ease;
-          }
-          .animate-scaleIn {
-            animation: scaleIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-          }
-        `}</style>
       </div>
     </div>
   );

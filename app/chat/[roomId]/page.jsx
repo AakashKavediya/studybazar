@@ -1,20 +1,21 @@
 // app/chat/[roomId]/page.jsx
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useSelector } from "react-redux";
 import { useParams, useRouter } from "next/navigation";
 import io from "socket.io-client";
 
 import ProtectedRoute from "@/components/ProtectedRoute";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "${process.env.NEXT_PUBLIC_API_URL}";
+// ✅ Use the real URL (no template literal bug)
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 const normalizeMessage = (payload) => {
   if (!payload) return null;
   const content = payload.content ?? payload.text ?? payload.message ?? "";
   return {
-    _id: payload._id || payload.id || `${Date.now()}-${Math.random()}`,
+    _id: payload._id || payload.id || `tmp-${Date.now()}-${Math.random()}`,
     room_id: payload.room_id || payload.roomId || null,
     sender_id: payload.sender_id || payload.senderId || null,
     content: typeof content === "string" ? content : String(content),
@@ -28,9 +29,11 @@ export default function ChatPage() {
   const router = useRouter();
 
   const rawRoomId = params?.roomId;
-  const roomId = typeof rawRoomId === "string" ? rawRoomId.trim() : "";
+  const roomId = Array.isArray(rawRoomId) ? rawRoomId[0] : rawRoomId;
+  const cleanRoomId = typeof roomId === "string" ? roomId.trim() : "";
 
-  const { user, accessToken } = useSelector((state) => state.auth);
+  const { user, accessToken, isInitialized } = useSelector((state) => state.auth);
+  const userId = user?.id || user?._id;
 
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState("");
@@ -40,16 +43,13 @@ export default function ChatPage() {
   const socketRef = useRef(null);
   const messagesEndRef = useRef(null);
 
-  const userId = user?.id || user?._id;
-
-  // --- Fetch Chat History ---
+  // ✅ 1. Fetch chat history (only when auth is ready)
   useEffect(() => {
-    if (!roomId || !userId || !accessToken) return;
+    if (!isInitialized || !cleanRoomId || !userId || !accessToken) return;
 
     const fetchChatHistory = async () => {
       try {
-        const url = `${API_URL}/chat/room/${roomId}/messages`;
-        const response = await fetch(url, {
+        const response = await fetch(`${API_URL}/chat/room/${cleanRoomId}/messages`, {
           headers: {
             Authorization: `Bearer ${accessToken}`,
             "Content-Type": "application/json",
@@ -59,27 +59,25 @@ export default function ChatPage() {
 
         if (response.ok) {
           const data = await response.json();
-          const historyMessages = data
-            .map((msg) => normalizeMessage(msg))
-            .filter(Boolean);
-          if (historyMessages.length > 0) {
-            setMessages(historyMessages);
-          }
+          const historyMessages = data.map(normalizeMessage).filter(Boolean);
+          setMessages(historyMessages);
         }
       } catch (error) {
-        console.error("❌ Network error fetching chat history:", error);
+        console.error("❌ Error fetching chat history:", error);
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchChatHistory();
-  }, [roomId, userId, accessToken]);
+  }, [isInitialized, cleanRoomId, userId, accessToken]);
 
-  // --- Live Socket Connection ---
+  // ✅ 2. Connect Socket (only when auth is ready)
   useEffect(() => {
-    if (!roomId || !userId) return;
-    if (socketRef.current) return;
+    if (!isInitialized || !cleanRoomId || !userId) return;
+    if (socketRef.current) return; // Prevent double connections
+
+    console.log("🔌 Connecting socket to:", API_URL);
 
     const socket = io(API_URL, {
       path: "/socket.io",
@@ -94,26 +92,15 @@ export default function ChatPage() {
 
     socketRef.current = socket;
 
-    socket.on("receive_message", (payload) => {
-      const message = normalizeMessage(payload);
-      if (!message) return;
-      setMessages((prev) => {
-        const exists = prev.some((m) => m._id === message._id);
-        if (exists) return prev;
-        return [...prev, message];
-      });
-      requestAnimationFrame(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-      });
-    });
-
     socket.on("connect", () => {
+      console.log("✅ Socket connected:", socket.id);
       setIsConnected(true);
-      socket.emit("join_room", { room_id: roomId });
+      // ✅ Join the room on every (re)connect
+      socket.emit("join_room", { room_id: cleanRoomId });
     });
 
     socket.on("connect_error", (err) => {
-      console.error("❌ Socket connection error:", err?.message || err);
+      console.error("❌ Socket connect error:", err.message);
       setIsConnected(false);
     });
 
@@ -122,38 +109,56 @@ export default function ChatPage() {
       setIsConnected(false);
     });
 
+    // ✅ Receive messages — deduplicate
+    socket.on("receive_message", (payload) => {
+      const message = normalizeMessage(payload);
+      if (!message) return;
+
+      setMessages((prev) => {
+        // Skip if already present (by _id)
+        if (prev.some((m) => m._id === message._id)) return prev;
+        return [...prev, message];
+      });
+
+      // Auto-scroll to bottom
+      requestAnimationFrame(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      });
+    });
+
     return () => {
       socket.off("connect");
-      socket.off("receive_message");
       socket.off("connect_error");
       socket.off("disconnect");
+      socket.off("receive_message");
       socket.disconnect();
       socketRef.current = null;
     };
-  }, [roomId, userId]);
+  }, [isInitialized, cleanRoomId, userId]);
 
-  // --- Send Message ---
+  // ✅ 3. Send message
   const handleSendMessage = (e) => {
     e.preventDefault();
     const trimmed = inputMessage.trim();
-    if (!trimmed || !userId || !socketRef.current || !isConnected) return;
+    if (!trimmed || !userId || !socketRef.current || !isConnected) {
+      console.warn("Cannot send:", { trimmed, userId, isConnected });
+      return;
+    }
 
     socketRef.current.emit("send_message", {
-      room_id: roomId,
+      room_id: cleanRoomId,
       sender_id: userId,
       content: trimmed,
     });
+
     setInputMessage("");
   };
 
-  // ============================================================
-  // ✅ CRITICAL FIX: Display Raw UTC Time, Do NOT Convert to Local
-  // ============================================================
+  // Format time (raw UTC → HH:MM AM/PM)
   const formatTime = (dateString) => {
     if (!dateString) return "";
     const timePart = dateString.split("T")[1]?.slice(0, 5);
     if (!timePart) return "";
-
     const [hourStr, minute] = timePart.split(":");
     let hour = parseInt(hourStr, 10);
     const ampm = hour >= 12 ? "PM" : "AM";
@@ -161,10 +166,8 @@ export default function ChatPage() {
     return `${hour}:${minute} ${ampm}`;
   };
 
-  // ============================================================
-  // ✅ UI RENDER
-  // ============================================================
-  if (isLoading || !userId) {
+  // Loading state
+  if (!isInitialized || isLoading || !userId) {
     return (
       <ProtectedRoute>
         <div className="flex justify-center items-center h-screen bg-[#0A0A0A] text-[#F5F5F5]">
@@ -179,25 +182,15 @@ export default function ChatPage() {
 
   return (
     <ProtectedRoute>
-      <div
-        className="flex flex-col h-screen w-screen bg-[#0A0A0A] text-white"
-        suppressHydrationWarning
-      >
-        {/* --- Header --- */}
+      <div className="flex flex-col h-screen w-screen bg-[#0A0A0A] text-white">
+        {/* Header */}
         <div className="flex items-center justify-between px-4 py-4 bg-[#141414]/80 backdrop-blur-md border-b border-[#2A2A2A] sticky top-0 z-10">
           <div className="flex items-center gap-3">
             <button
               onClick={() => router.back()}
               className="text-[#A0A0A0] hover:text-white p-2 rounded-full hover:bg-[#1A1A1A] transition-all"
             >
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M19 12H5M12 19l-7-7 7-7" />
               </svg>
             </button>
@@ -205,38 +198,30 @@ export default function ChatPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <div
-              className={`w-2.5 h-2.5 rounded-full transition-colors duration-300 ${
-                isConnected ? "bg-green-500" : "bg-red-500"
-              }`}
-            />
+            <div className={`w-2.5 h-2.5 rounded-full transition-colors ${isConnected ? "bg-green-500" : "bg-red-500"}`} />
             <span className="text-xs text-[#A0A0A0] font-medium">
               {isConnected ? "Online" : "Offline"}
             </span>
           </div>
         </div>
 
-        {/* --- Messages Area (Full width) --- */}
+        {/* Messages */}
         <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4 scrollbar-hide w-full">
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-[#6B6B6B]">
               <div className="text-4xl mb-3 opacity-30">💬</div>
               <p className="text-sm font-medium">No messages yet</p>
-              <p className="text-xs text-[#4A4A4A]">
-                Say hello to start the conversation
-              </p>
+              <p className="text-xs text-[#4A4A4A]">Say hello to start the conversation</p>
             </div>
           ) : (
             messages.map((msg, index) => {
               const isMe = msg.sender_id === userId;
-              const text = msg.content ?? msg.text ?? msg.message ?? "";
+              const text = msg.content;
 
               return (
                 <div
                   key={msg._id || `${msg.created_at}-${index}`}
-                  className={`flex flex-col ${
-                    isMe ? "items-end" : "items-start"
-                  } animate-fadeIn w-full`}
+                  className={`flex flex-col ${isMe ? "items-end" : "items-start"} animate-fadeIn w-full`}
                 >
                   <div
                     className={`p-3.5 rounded-2xl max-w-[75%] break-words text-[15px] leading-relaxed shadow-sm ${
@@ -247,7 +232,6 @@ export default function ChatPage() {
                   >
                     {text}
                   </div>
-
                   <span className="text-[10px] text-[#6B6B6B] mt-1 px-1">
                     {formatTime(msg.created_at)}
                   </span>
@@ -255,21 +239,17 @@ export default function ChatPage() {
               );
             })
           )}
-
           <div ref={messagesEndRef} />
         </div>
 
-        {/* --- Input Area --- */}
+        {/* Input */}
         <div className="p-4 bg-[#141414]/80 backdrop-blur-md border-t border-[#2A2A2A]">
-          <form
-            onSubmit={handleSendMessage}
-            className="flex gap-3 w-full max-w-3xl mx-auto"
-          >
+          <form onSubmit={handleSendMessage} className="flex gap-3 w-full max-w-3xl mx-auto">
             <input
               type="text"
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
-              placeholder="Type a message..."
+              placeholder={isConnected ? "Type a message..." : "Connecting..."}
               disabled={!isConnected}
               className="flex-1 p-3.5 rounded-2xl bg-[#1A1A1A] border border-[#2A2A2A] text-white text-[15px] outline-none focus:border-[#F5A623] focus:ring-1 focus:ring-[#F5A623]/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed placeholder:text-[#6B6B6B]"
             />
@@ -278,16 +258,7 @@ export default function ChatPage() {
               disabled={!isConnected || !inputMessage.trim()}
               className="px-6 py-3.5 bg-[#F5A623] text-[#0A0A0A] font-bold rounded-2xl hover:opacity-90 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-[#F5A623]/20 shrink-0"
             >
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M22 2L11 13" />
                 <path d="M22 2l-7 20-4-9-9-4 20-7z" />
               </svg>
@@ -297,25 +268,12 @@ export default function ChatPage() {
 
         <style jsx>{`
           @keyframes fadeIn {
-            from {
-              opacity: 0;
-              transform: translateY(6px);
-            }
-            to {
-              opacity: 1;
-              transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
           }
-          .animate-fadeIn {
-            animation: fadeIn 0.25s ease-out forwards;
-          }
-          .scrollbar-hide::-webkit-scrollbar {
-            display: none;
-          }
-          .scrollbar-hide {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-          }
+          .animate-fadeIn { animation: fadeIn 0.25s ease-out forwards; }
+          .scrollbar-hide::-webkit-scrollbar { display: none; }
+          .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
         `}</style>
       </div>
     </ProtectedRoute>

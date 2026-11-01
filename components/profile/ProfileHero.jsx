@@ -1,4 +1,4 @@
-// app/profile/components/ProfileHero.jsx
+// components/profile/ProfileHero.jsx
 "use client";
 
 import { useMemo, useState, useCallback } from "react";
@@ -21,14 +21,16 @@ import ProfileSocialLinks from "@/components/ui/ProfileSocialLinks";
 import ProfileActions from "@/components/ui/ProfileActions";
 import ImageUploadModal from "@/components/ui/ImageUploadModal";
 
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL || "${process.env.NEXT_PUBLIC_API_URL}";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 function ProfileHero({
   userData,
   isOwnProfile,
   isFollowing,
-  setIsFollowing,
+  onFollow,          // ✅ From parent
+  onMessage,         // ✅ From parent
+  isFollowLoading,
+  isMessageLoading,
   onEditClick,
   onShareClick,
   onFollowersClick,
@@ -38,7 +40,6 @@ function ProfileHero({
   const { accessToken } = useSelector((state) => state.auth);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [isFollowLoading, setIsFollowLoading] = useState(false);
 
   // ---------- Social links ----------
   const socialLinks = useMemo(() => {
@@ -53,7 +54,7 @@ function ProfileHero({
     );
   }, [userData.social_links]);
 
-  // ---------- Stats (from /users/stats) ----------
+  // ---------- Stats ----------
   const stats = useMemo(
     () => [
       { label: "Products", value: userData.active_listings_count || 0 },
@@ -64,7 +65,6 @@ function ProfileHero({
     [userData]
   );
 
-  // ---------- Name parts ----------
   const nameParts = useMemo(() => {
     const fullName = userData.name || "";
     const parts = fullName.split(" ");
@@ -74,97 +74,43 @@ function ProfileHero({
     };
   }, [userData.name]);
 
-  const location = useMemo(
-    () => userData.campus || "Student",
-    [userData.campus]
-  );
-
-  const role = useMemo(
-    () => (userData.year ? `${userData.year} Year Student` : "Student"),
-    [userData.year]
-  );
-
+  const location = useMemo(() => userData.campus || "Student", [userData.campus]);
+  const role = useMemo(() => (userData.year ? `${userData.year} Year Student` : "Student"), [userData.year]);
   const skills = useMemo(() => userData.skills || [], [userData.skills]);
 
-  // ---------- Follow / Unfollow ----------
-  const handleFollow = useCallback(async () => {
-    if (!accessToken) {
-      return;
-    }
-
-    setIsFollowLoading(true);
-    try {
-      const endpoint = isFollowing ? "follow" : "follow";
-      const method = isFollowing ? "DELETE" : "POST";
-      const response = await axios({
-        method,
-        url: `${API_URL}/users/${userData.id}/${endpoint}`,
-        headers: { Authorization: `Bearer ${accessToken}` },
-        withCredentials: true,
-      });
-
-      if (response.data?.data || response.status === 200) {
-        setIsFollowing(!isFollowing);
-      }
-    } catch (err) {
-      console.error("Error following/unfollowing:", err);
-      alert(err.response?.data?.detail || "Failed to update follow status");
-    } finally {
-      setIsFollowLoading(false);
-    }
-  }, [userData.id, isFollowing, accessToken, setIsFollowing]);
-
-  // ---------- Image upload ----------
+  // ---------- Image Upload ----------
   const handleImageUpload = useCallback(
     async (file) => {
       setIsUploading(true);
       try {
         const formData = new FormData();
         formData.append("file", file);
-        formData.append(
-          "upload_preset",
-          process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "study-mart"
-        );
+        formData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "study-mart");
 
-        const cloudinaryResponse = await axios.post(
-          `https://api.cloudinary.com/v1_1/${
-            process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "dtdivzyct"
-          }/image/upload`,
+        const cloudRes = await axios.post(
+          `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "dtdivzyct"}/image/upload`,
           formData,
-          {
-            headers: { "Content-Type": "multipart/form-data" },
-            timeout: 30000,
-          }
+          { headers: { "Content-Type": "multipart/form-data" }, timeout: 30000 }
         );
 
-        const imageUrl = cloudinaryResponse.data.secure_url;
+        const imageUrl = cloudRes.data.secure_url;
 
-        const updateResponse = await axios.post(
+        const updateRes = await axios.post(
           `${API_URL}/users/profile_image`,
           { profile_image: imageUrl },
           {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-              "Content-Type": "application/json",
-            },
+            headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
             withCredentials: true,
             timeout: 30000,
           }
         );
 
-        if (updateResponse.data?.user) {
-          dispatch(setUser(updateResponse.data.user));
-        }
-
+        if (updateRes.data?.user) dispatch(setUser(updateRes.data.user));
         setShowUploadModal(false);
         alert("✅ Profile picture updated successfully!");
       } catch (error) {
         console.error("Image upload error:", error);
-        alert(
-          error.response?.data?.detail ||
-            error.message ||
-            "Failed to upload image"
-        );
+        alert(error.response?.data?.detail || error.message || "Failed to upload image");
       } finally {
         setIsUploading(false);
       }
@@ -178,16 +124,13 @@ function ProfileHero({
         <CornerBrackets />
 
         <div className="p-5 sm:p-7">
-          {/* Top row: role + location + avatar */}
           <div className="flex justify-between items-start mb-4">
             <div className="flex items-center gap-3">
               <span className="text-[10px] font-semibold tracking-[0.2em] text-[#A3A3A3] uppercase">
                 {role}
               </span>
               <span className="w-6 h-px bg-[#262626]" />
-              <span className="text-[9px] text-[#A3A3A3] font-medium">
-                {location}
-              </span>
+              <span className="text-[9px] text-[#A3A3A3] font-medium">{location}</span>
             </div>
 
             <ProfileAvatar
@@ -198,44 +141,38 @@ function ProfileHero({
             />
           </div>
 
-          {/* Name */}
           <div className="mb-3">
             <h1 className="text-2xl sm:text-3xl font-bold leading-[1.1] tracking-tight text-[#F5F5F5] m-0">
-              {nameParts.firstName}
-              <br />
-              {nameParts.lastName}
+              {nameParts.firstName}<br />{nameParts.lastName}
             </h1>
           </div>
 
-          {/* Bio */}
           {userData.bio && (
             <p className="text-[13px] sm:text-[14px] text-[#A3A3A3] leading-relaxed max-w-[500px] m-0 mb-4">
               {userData.bio}
             </p>
           )}
 
-          {/* Skills */}
           <ProfileSkills skills={skills} />
 
-          {/* Stats — now clickable for Followers/Following */}
           <ProfileStats
             stats={stats}
             onFollowersClick={onFollowersClick}
             onFollowingClick={onFollowingClick}
           />
 
-          {/* Social Links */}
           <ProfileSocialLinks links={socialLinks} />
 
-          {/* Actions */}
+          {/* ✅ Pass the correct props, NO setIsFollowing */}
           <ProfileActions
             isOwnProfile={isOwnProfile}
             isFollowing={isFollowing}
-            setIsFollowing={setIsFollowing}
             isLoading={isFollowLoading}
+            isMessageLoading={isMessageLoading}
             onEditClick={onEditClick}
             onShareClick={onShareClick}
-            onFollow={handleFollow}
+            onFollow={onFollow}
+            onMessage={onMessage}
           />
         </div>
       </div>
