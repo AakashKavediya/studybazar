@@ -9,7 +9,6 @@ import {
   MoreHorizontal,
   Trash2,
   Loader2,
-  PackageX,
 } from "lucide-react";
 
 /* ---------- Empty state ---------- */
@@ -89,7 +88,7 @@ const GridItem = ({
       {/* Hover overlay */}
       <div
         className="absolute inset-0 bg-black/60 flex items-center justify-center transition-opacity duration-300"
-        style={{ opacity: isHovered ? 1 : 0 }}
+        style={{ opacity: isHovered || isDeleting ? 1 : 0 }}
       >
         <div className="flex items-center gap-6 text-white">
           <div className="flex items-center gap-1.5">
@@ -106,7 +105,7 @@ const GridItem = ({
           </div>
         </div>
 
-        {/* Delete button — own profile only */}
+        {/* ✅ Delete button enabled for BOTH products and lost&found */}
         {isOwnProfile && onDelete && (
           <button
             onClick={handleDeleteClick}
@@ -146,11 +145,12 @@ function ProfileProducts({
   isOwnProfile,
   onDeleteProduct,
   deletingProductId,
+  onDeleteLostFound,
+  deletingLostFoundId,
 }) {
   const [activeTab, setActiveTab] = useState("all");
   const [hoveredId, setHoveredId] = useState(null);
 
-  // Product tabs
   const categories = useMemo(
     () => [
       { id: "all", label: "All", count: productsListed.length },
@@ -214,6 +214,16 @@ function ProfileProducts({
   const gridItems = useMemo(() => {
     return activeItems.map((product, index) => {
       const id = product._id || product.id;
+      
+      // ✅ Route delete to the correct handler based on tab
+      const onDelete = isOwnProfile 
+        ? (isLostFound ? onDeleteLostFound : onDeleteProduct) 
+        : undefined;
+      
+      const isDeleting = isLostFound 
+        ? deletingLostFoundId === id 
+        : deletingProductId === id;
+
       return (
         <GridItem
           key={id || index}
@@ -221,10 +231,8 @@ function ProfileProducts({
           index={index}
           isHovered={hoveredId === id}
           onHover={handleHover}
-          onDelete={
-            isOwnProfile && !isLostFound ? onDeleteProduct : undefined
-          }
-          isDeleting={deletingProductId === id}
+          onDelete={onDelete}
+          isDeleting={isDeleting}
           isOwnProfile={isOwnProfile}
           variant={isLostFound ? "lostfound" : "product"}
         />
@@ -237,7 +245,9 @@ function ProfileProducts({
     isOwnProfile,
     isLostFound,
     onDeleteProduct,
+    onDeleteLostFound,
     deletingProductId,
+    deletingLostFoundId,
   ]);
 
   return (
@@ -253,14 +263,6 @@ function ProfileProducts({
               {productCount} {productCount === 1 ? "item" : "items"}
             </p>
           </div>
-          {isOwnProfile && (
-            <button
-              className="text-xs font-medium text-white/50 hover:text-white transition-colors"
-              aria-label="Manage items"
-            >
-              Manage
-            </button>
-          )}
         </div>
       </div>
 

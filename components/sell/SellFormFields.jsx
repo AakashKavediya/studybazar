@@ -1,7 +1,7 @@
 // components/sell/SellFormFields.jsx
 "use client";
 
-import { FaImage, FaTimes, FaUpload, FaSpinner } from "react-icons/fa";
+import { FaImage, FaTimes, FaUpload, FaSpinner, FaExclamationTriangle } from "react-icons/fa";
 
 const CATEGORIES = [
   { value: "notes", label: "Notes" },
@@ -16,13 +16,11 @@ const CATEGORIES = [
 ];
 
 export default function SellFormFields({
-  formData,
-  setFormData,
-  preview,
-  isUploading,
-  isSubmitting,
-  handleImageUpload,
-  handleRemoveImage,
+  formData, setFormData, preview,
+  isUploading, isSubmitting,
+  isModerating, moderationError,       // ✅ these are needed
+  handleImageUpload, handleRemoveImage,
+  onChange,
 }) {
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -122,7 +120,7 @@ export default function SellFormFields({
                 type="button"
                 onClick={handleRemoveImage}
                 className="absolute -top-1.5 -right-1.5 bg-[#FF3B30] text-white rounded-full w-6 h-6 flex items-center justify-center hover:scale-110 transition-transform shadow-lg"
-                disabled={isSubmitting}
+                disabled={isSubmitting || isModerating}
               >
                 <FaTimes size={12} />
               </button>
@@ -132,9 +130,13 @@ export default function SellFormFields({
               <FaImage size={24} />
             </div>
           )}
-          <label className="flex-1 px-4 py-3 bg-[#1A1A1A] border border-[#2A2A2A] text-white font-medium text-sm rounded-xl hover:bg-[#2A2A2A] transition-colors cursor-pointer text-center disabled:opacity-50">
-            {isUploading ? (
-              <FaSpinner className="animate-spin mx-auto" size={20} />
+          
+          <label className={`flex-1 px-4 py-3 bg-[#1A1A1A] border border-[#2A2A2A] text-white font-medium text-sm rounded-xl hover:bg-[#2A2A2A] transition-colors cursor-pointer text-center ${(isUploading || isModerating) ? 'opacity-50 cursor-not-allowed' : ''}`}>
+            {isUploading || isModerating ? (
+              <span className="flex items-center justify-center gap-2">
+                <FaSpinner className="animate-spin" size={16} />
+                {isModerating ? "Scanning image..." : "Uploading..."}
+              </span>
             ) : (
               <>
                 <FaUpload className="inline mr-2" size={14} />
@@ -146,12 +148,28 @@ export default function SellFormFields({
               accept="image/*"
               className="hidden"
               onChange={(e) => handleImageUpload(e.target.files?.[0])}
-              disabled={isUploading || isSubmitting}
+              disabled={isUploading || isSubmitting || isModerating}
             />
           </label>
         </div>
-        {formData.thumbnail && (
-          <p className="text-xs text-[#34C759] mt-2">✅ Image uploaded successfully</p>
+
+        {/* ✅ Success Message */}
+        {formData.thumbnail && !moderationError && (
+          <p className="text-xs text-[#34C759] mt-2 flex items-center gap-1">
+            ✅ Image uploaded and verified successfully
+          </p>
+        )}
+
+        {/* ✅ Moderation Error Message */}
+        {moderationError && (
+          <div className="mt-3 p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-start gap-2">
+            <FaExclamationTriangle className="text-[#FF3B30] mt-0.5 flex-shrink-0" size={14} />
+            <div className="text-xs text-[#FF3B30]">
+              <p className="font-semibold mb-1">Upload Blocked</p>
+              <p>{moderationError}</p>
+              <p className="mt-1 opacity-80">Repeated violations will result in account deletion.</p>
+            </div>
+          </div>
         )}
       </div>
 

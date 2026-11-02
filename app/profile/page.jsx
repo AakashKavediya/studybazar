@@ -48,6 +48,7 @@ export default function ProfilePage() {
     });
 
     const [deletingProductId, setDeletingProductId] = useState(null);
+    const [deletingLostFoundId, setDeletingLostFoundId] = useState(null);
 
     const hasFetchedRef = useRef(false);
 
@@ -62,6 +63,7 @@ export default function ProfilePage() {
         [user]
     );
 
+    // ✅ 1. Fetch Products
     const fetchMyProducts = useCallback(async () => {
         if (!accessToken) return;
         setLoadingState((p) => ({ ...p, products: true }));
@@ -80,6 +82,7 @@ export default function ProfilePage() {
         }
     }, [accessToken]);
 
+    // ✅ 2. Fetch Lost & Found
     const fetchMyLostFound = useCallback(async () => {
         if (!accessToken) return;
         setLoadingState((p) => ({ ...p, lostFound: true }));
@@ -91,13 +94,14 @@ export default function ProfilePage() {
             });
             setLostFoundItems(res.data?.data?.items || []);
         } catch (e) {
+            console.error("Failed to fetch lost & found:", e);
             setLostFoundItems([]);
         } finally {
             setLoadingState((p) => ({ ...p, lostFound: false }));
         }
     }, [accessToken]);
 
-    // ✅ Fetch stats and update Redux so ProfileHero shows correct counts
+    // ✅ 3. Fetch Stats
     const fetchStats = useCallback(async () => {
         if (!accessToken) return;
         setLoadingState((p) => ({ ...p, stats: true }));
@@ -108,20 +112,18 @@ export default function ProfilePage() {
             });
             const data = res.data?.data || res.data || {};
             
-            // Update local state for the tabs
             setStats({
                 followers: data.followers ?? 0,
                 following: data.following ?? 0,
                 products: data.products ?? 0,
             });
 
-            // ✅ Push fresh counts to Redux so the Hero section updates
             if (user) {
                 dispatch(setUser({
                     ...user,
                     followers_count: data.followers ?? 0,
                     following_count: data.following ?? 0,
-                    active_listings_count: data.products ?? 0, // Map stats.products to active_listings_count
+                    active_listings_count: data.products ?? 0,
                 }));
             }
         } catch (e) {
@@ -131,9 +133,7 @@ export default function ProfilePage() {
         }
     }, [accessToken, user, dispatch]);
 
-    // ✅ After DELETE succeeds, re-fetch products & stats
-
-
+    // ✅ 4. Initial Fetch
     useEffect(() => {
         if (!accessToken) return;
         if (hasFetchedRef.current) return;
@@ -144,6 +144,51 @@ export default function ProfilePage() {
         fetchStats();
     }, [accessToken, fetchMyProducts, fetchMyLostFound, fetchStats]);
 
+    // ✅ 5. Delete Product Handler
+    const handleDeleteProduct = useCallback(async (productId) => {
+        if (!productId || !confirm("Delete this listing? This cannot be undone.")) return;
+        
+        setDeletingProductId(productId);
+        try {
+            await axios.delete(`${API_URL}/products/${productId}`, {
+                headers: { Authorization: `Bearer ${accessToken}` },
+                withCredentials: true,
+            });
+
+            setProducts((prev) => prev.filter((p) => (p._id || p.id) !== productId));
+            await fetchMyProducts();
+            await fetchStats();
+        } catch (error) {
+            console.error("Delete failed:", error);
+            alert(error.response?.data?.detail || "Failed to delete product");
+        } finally {
+            setDeletingProductId(null);
+        }
+    }, [accessToken, fetchMyProducts, fetchStats]);
+
+    // ✅ 6. Delete Lost & Found Handler (Placed correctly below fetch functions)
+    const handleDeleteLostFound = useCallback(async (itemId) => {
+        if (!itemId || !confirm("Delete this Lost & Found post? This cannot be undone.")) return;
+        
+        setDeletingLostFoundId(itemId);
+        try {
+            await axios.delete(`${API_URL}/lost-and-found/${itemId}`, {
+                headers: { Authorization: `Bearer ${accessToken}` },
+                withCredentials: true,
+            });
+
+            setLostFoundItems((prev) => prev.filter((i) => (i._id || i.id) !== itemId));
+            await fetchMyLostFound();
+            await fetchStats();
+        } catch (error) {
+            console.error("Delete failed:", error);
+            alert(error.response?.data?.detail || "Failed to delete item");
+        } finally {
+            setDeletingLostFoundId(null);
+        }
+    }, [accessToken, fetchMyLostFound, fetchStats]);
+
+    // ✅ 7. Other Handlers
     const handleEditProfile = useCallback(() => setShowEditModal(true), []);
 
     const handleShareProfile = useCallback(() => {
@@ -199,40 +244,11 @@ export default function ProfilePage() {
         finally { dispatch(clearAccessToken()); router.push("/auth/signin"); }
     }, [dispatch, router]);
 
-    // ✅ FIX: After DELETE succeeds, re-fetch products so ProfileProducts re-renders
-    // ✅ FIX: After DELETE succeeds, re-fetch products & stats
-  const handleDeleteProduct = useCallback(async (productId) => {
-        if (!productId || !confirm("Delete this listing? This cannot be undone.")) return;
-        
-        setDeletingProductId(productId);
-        try {
-            // 1. Send delete request
-            await axios.delete(`${API_URL}/products/${productId}`, {
-                headers: { Authorization: `Bearer ${accessToken}` },
-                withCredentials: true,
-            });
-
-            // 2. Remove from local state
-            setProducts((prev) => prev.filter((p) => (p._id || p.id) !== productId));
-
-            // 3. Re-fetch products and stats from server
-            await fetchMyProducts();
-            await fetchStats(); // ✅ This will now update the Redux user too
-            
-        } catch (error) {
-            console.error("Delete failed:", error);
-            alert(error.response?.data?.detail || "Failed to delete product");
-        } finally {
-            setDeletingProductId(null);
-        }
-    }, [accessToken, fetchMyProducts, fetchStats]);
-
     const handleOpenFollowers = useCallback((tab = "followers") => {
         setFollowersModalTab(tab);
         setShowFollowersModal(true);
     }, []);
 
-    // ✅ After closing followers modal, refetch stats so counts update
     const handleCloseFollowersModal = useCallback(async () => {
         setShowFollowersModal(false);
         await fetchStats();
@@ -289,6 +305,8 @@ export default function ProfilePage() {
                         isOwnProfile={isOwnProfile}
                         onDeleteProduct={handleDeleteProduct}
                         deletingProductId={deletingProductId}
+                        onDeleteLostFound={handleDeleteLostFound}
+                        deletingLostFoundId={deletingLostFoundId}
                     />
 
                     {isOwnProfile && (
@@ -306,16 +324,15 @@ export default function ProfilePage() {
                 {showDeleteModal && <DeleteModal isOpen={showDeleteModal} onClose={() => setShowDeleteModal(false)} onConfirm={handleDeleteAccount} isLoading={loadingState.delete} />}
                 {showPasswordModal && <PasswordModal isOpen={showPasswordModal} onClose={() => setShowPasswordModal(false)} onConfirm={handlePasswordUpdate} isLoading={loadingState.password} />}
                 {showFollowersModal && (
-                <FollowersModal
-                    isOpen={showFollowersModal}
-                    onClose={handleCloseFollowersModal}
-                    // ✅ FIX: Use _id, not id
-                    userId={userData._id || userData.id} 
-                    defaultTab={followersModalTab}
-                    accessToken={accessToken}
-                />
+                    <FollowersModal
+                        isOpen={showFollowersModal}
+                        onClose={handleCloseFollowersModal}
+                        userId={userData._id || userData.id} 
+                        defaultTab={followersModalTab}
+                        accessToken={accessToken}
+                    />
                 )}
-        </div>
+            </div>
         </ProtectedRoute>
     );
 }
